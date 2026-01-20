@@ -1,60 +1,82 @@
 # Stop Procrastinating
 
-An intelligent, empathetic anti-procrastination assistant designed to help you overcome inertia, build momentum, and track your progress.
+An **empathetic, behavior-focused anti-procrastination assistant** designed to help students overcome inertia, start tasks early, and improve consistency through awareness, reflection, and gentle recommendations.
 
-![Stop Procrastinating App Screenshot](https://via.placeholder.com/800x400?text=Stop+Procrastinating+App+Preview)
+This project focuses on **reducing procrastination**, not forcing productivity.
 
-## 🚀 Key Features
+---
 
-*   **🎯 Start Small Philosophy**: overcoming the initial resistance by breaking tasks into "2-minute micro-steps".
-*   **🎭 Mood-Based Productivity**: Filter and select tasks based on your current state (Focused, Low Energy, or Bored).
-*   **☁️ Cloud Sync & Backup**: Seamlessly sync your data across devices using Google Sign-In (powered by Firebase).
-*   **🔥 Gamification**: Earn "Focus Points" and build daily streaks to stay motivated.
-*   **🛡️ Distraction Limiter**: Set firm intentions before visiting distracting sites.
-*   **📊 Insights & Analysis**: Visualize your work vs. procrastination habits over time.
-*   **📅 Planning Hub**: Manage daily commitments and schedule future tasks to reduce anxiety.
+## 🎯 Problem Statement
+
+Students (especially aged 18–24) often procrastinate due to:
+- low energy
+- boredom
+- fear of difficulty
+- digital distractions
+- lack of daily reflection
+
+Most productivity tools focus on *planning more*, while the real issue is **not starting**.
+
+**Stop Procrastinating** is built to address this behavioral gap.
+
+---
+
+## 🚀 Core Features
+
+### ✅ Implemented / Prototype Stage
+- **Start Small Philosophy**
+  - Tasks are broken into small, low-resistance first steps.
+- **Mood-Based Task Selection**
+  - Tasks mapped to user’s current state: *Focused, Low Energy, Bored*.
+- **Task Completion with Proof**
+  - Users reflect on what they actually did (text + optional image).
+- **Daily Reflection (Diary)**
+  - End-of-day inputs to understand distractions and repeated mistakes.
+- **Future Task Scheduler**
+  - Helps avoid last-day panic for exams, submissions, and deadlines.
+- **Google Sign-In & Cloud Sync**
+  - Firebase Authentication + Firestore for multi-device access.
+- **Offline-first Design**
+  - LocalStorage used with optional cloud backup.
+
+### 🧪 In Progress / Planned
+- **Distraction Awareness Sessions**
+  - Users declare purpose and time before using distracting apps.
+- **Behavior-Based Suggestions**
+  - Recommendations generated from past reflections and patterns.
+- **Insights Dashboard**
+  - Visual summaries of procrastination vs. progress.
+- **Mobile-first Enhancements**
+  - Preparing the web app for future mobile (hybrid/native) conversion.
+
+> ⚠️ This project prioritizes **empathy and awareness** over strict blocking or punishment.
+
+---
+
+## 🧠 Design Thinking Approach
+
+This project follows a **Design Thinking methodology**:
+
+1. **Empathy** – Surveys, interviews, and diary-style inputs from students  
+2. **Define** – Identified procrastination as a behavioral problem  
+3. **Ideate** – Brainstorming, SCAMPER, decision matrix  
+4. **Prototype** – Web-based interactive prototype  
+5. **Test** – Iterative refinement based on feedback  
+
+---
 
 ## 🛠️ Tech Stack
 
-*   **Frontend**: React.js, Vite
-*   **Styling**: Plain CSS with Modern Design Variables, `lucide-react` for icons
-*   **Backend / Auth**: Firebase Authentication, Cloud Firestore
-*   **Persistence**: LocalStorage (offline-first) + Cloud Sync
+- **Frontend**: HTML, CSS, JavaScript (React-compatible structure)
+- **Authentication**: Firebase Google Sign-In
+- **Database**: Cloud Firestore
+- **Persistence**: LocalStorage + Cloud Sync
+- **Hosting**: GitHub Pages / Firebase Hosting (planned)
 
-## 📦 Installation
+---
 
-1.  **Clone the repository**
-    ```bash
-    git clone https://github.com/harinath408962/Stop_Procrastinating.git
-    cd Stop_Procrastinating
-    ```
+## 📦 Local Setup
 
-2.  **Install Dependencies**
-    ```bash
-    npm install
-    ```
-
-3.  **Run Development Server**
-    ```bash
-    npm run dev
-    ```
-
-## 🔧 Configuration (Firebase)
-
-To enable Cloud Sync, this project requires a Firebase configuration.
-Create a file at `src/utils/firebase.js` with your keys:
-
-```javascript
-import { initializeApp } from "firebase/app";
-// ... content of config
-```
-
-> **Note**: The current repo comes with a pre-configured `firebase.js`.
-
-## 🤝 Contributing
-
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
+```bash
+git clone https://github.com/harinath408962/Stop_Procrastinating.git
+cd Stop_Procrastinating
