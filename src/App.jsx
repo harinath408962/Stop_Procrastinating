@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import MoodSelect from './pages/MoodSelect';
 import TaskList from './pages/TaskList';
@@ -12,7 +12,7 @@ import SignIn from './pages/SignIn';
 
 function App() {
     return (
-        <BrowserRouter>
+        <HashRouter>
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/analysis" element={<Analysis />} />
@@ -25,7 +25,7 @@ function App() {
                 <Route path="/reflect" element={<Reflection />} />
                 <Route path="/limit" element={<DistractionLimiter />} />
             </Routes>
-        </BrowserRouter>
+        </HashRouter>
     )
 }
 
