@@ -89,7 +89,20 @@ const TaskComplete = () => {
         }
 
         // Gamification
-        const points = 10 + (task.isSchedule ? 5 : 0); // Bonus for scheduled items
+        const today = new Date().setHours(0, 0, 0, 0);
+        let points = 10; // Rule 1: Normal task = 10 points
+
+        if (task.isSchedule) {
+            // Rule 4: Future task completed on time
+            const due = new Date(task.dueDate).setHours(0, 0, 0, 0);
+            if (today <= due) {
+                points = 100;
+            } else {
+                // Late completion, maybe just standard points?
+                // User didn't specify, sticking to standard 10 (+ maybe 5 bonus from before? No, let's keep it simple as requested)
+                points = 10;
+            }
+        }
         addPoints(points);
         updateStreak();
 
@@ -142,7 +155,7 @@ const TaskComplete = () => {
 
 
                         <div style={{ marginBottom: '1.5rem' }}>
-                            <label>What did you learn? (Optional)</label>
+                            <label>What did you learn or do? (Optional)</label>
                             <textarea
                                 value={learning}
                                 onChange={e => setLearning(e.target.value)}
@@ -165,6 +178,7 @@ const TaskComplete = () => {
                                 type="file"
                                 accept="image/*"
                                 capture="environment"
+                                id="cameraInput"
                                 ref={cameraInputRef}
                                 onChange={handleFileSelect}
                                 style={{ display: 'none' }}

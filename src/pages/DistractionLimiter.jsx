@@ -69,6 +69,12 @@ const DistractionLimiter = () => {
         }
     };
 
+    const resetLoggingState = () => {
+        setSelectedDistraction(null);
+        setSelectedReasons([]);
+        setTimeSpent('');
+    };
+
     // Render Views
 
     if (mode === 'calm') {
@@ -90,7 +96,7 @@ const DistractionLimiter = () => {
                 <div className="container" style={{ textAlign: 'center', paddingTop: '4rem' }}>
                     <h2>Logged.</h2>
                     <p>Awareness is the first step. Use this data tomorrow.</p>
-                    <button className="btn-primary" onClick={() => setMode('initial')} style={{ marginTop: '2rem' }}>Done</button>
+                    <button className="btn-primary" onClick={() => { setMode('initial'); resetLoggingState(); }} style={{ marginTop: '2rem' }}>Done</button>
                 </div>
             </Layout>
         );
@@ -144,7 +150,7 @@ const DistractionLimiter = () => {
             <Layout>
                 <div className="container">
                     <button
-                        onClick={() => setMode('initial')}
+                        onClick={() => { setMode('initial'); resetLoggingState(); }}
                         style={{
                             background: 'var(--color-bg-secondary)',
                             border: 'none',
@@ -254,7 +260,7 @@ const DistractionLimiter = () => {
                     <button
                         className="btn-primary"
                         style={{ padding: '1.5rem', fontSize: '1.25rem', background: '#ef4444' }} // Red for Yes (Honesty)
-                        onClick={() => setMode('logging')}
+                        onClick={() => { resetLoggingState(); setMode('logging'); }}
                     >
                         Yes, I gave in.
                     </button>

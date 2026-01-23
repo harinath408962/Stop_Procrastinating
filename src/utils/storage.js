@@ -78,16 +78,9 @@ export const updateStreak = () => {
         } else if (stats.lastActiveDate === null) {
             stats.currentStreak = 1; // First day
         } else {
-            // Streak broken, or missed a day. 
-            // Logic: if last active was not yesterday, reset.
-            // But let's check if it's strictly > 1 day gap.
-            const last = new Date(stats.lastActiveDate);
-            const diffTime = Math.abs(new Date(today) - last);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            if (diffDays > 1) {
-                stats.currentStreak = 1;
-            }
+            // Streak broken? No, user requested "no need to be consistent"
+            // So we just increment simply if it's a new day effectively tracking "Total Active Days"
+            stats.currentStreak += 1;
         }
 
         if (stats.currentStreak > stats.longestStreak) {

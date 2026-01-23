@@ -148,7 +148,7 @@ const Reflection = () => {
                     >
                         <ArrowLeft size={18} /> Back
                     </button>
-                    <h2 style={{ margin: 0 }}>End of Day Reflection</h2>
+                    <h2 style={{ margin: 0 }}>Today's Reflection</h2>
                 </div>
 
                 <form onSubmit={handleSubmit} className="card">

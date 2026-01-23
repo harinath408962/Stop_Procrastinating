@@ -62,8 +62,8 @@ const Schedule = () => {
         const existingLogs = getStorage(STORAGE_KEYS.WORK_LOGS, []);
         setStorage(STORAGE_KEYS.WORK_LOGS, [...existingLogs, newLog]);
 
-        // Add small points
-        addPoints(2);
+        // Add points: 1 point per minute of work
+        addPoints(time);
 
         // Reset
         setLoggingTask(null);
@@ -346,6 +346,10 @@ const Schedule = () => {
                             const s = new Date(task.startDate).setHours(0, 0, 0, 0);
                             const e = new Date(task.dueDate).setHours(0, 0, 0, 0);
                             const isActive = today >= s && today <= e;
+
+                            // Filter out tasks that are past their due date
+                            if (e < today) return null;
+
                             if (task.completed) return null; // Logic check: hide completed? Assuming yes to keep list clean.
 
                             return (
