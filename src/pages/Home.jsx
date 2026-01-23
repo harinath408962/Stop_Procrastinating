@@ -9,6 +9,8 @@ const Home = () => {
     const [userName, setUserName] = useState('Friend');
     const [streak, setStreak] = useState(0);
     const [points, setPoints] = useState(0);
+    const [dailyStatement, setDailyStatement] = useState('Start your day!');
+    const [topDistractions, setTopDistractions] = useState([]);
     const [lastReflection, setLastReflection] = useState(null);
 
     useEffect(() => {
@@ -29,6 +31,17 @@ const Home = () => {
             const distTime = todaysDistractions.reduce((acc, curr) => acc + parseInt(curr.duration || 0), 0);
             const distCount = todaysDistractions.length;
 
+            // Top 3 Distractions
+            const distMap = {};
+            todaysDistractions.forEach(d => {
+                distMap[d.app] = (distMap[d.app] || 0) + parseInt(d.duration || 0);
+            });
+            const sortedDist = Object.entries(distMap)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 3)
+                .map(([name, duration]) => ({ name, duration }));
+            setTopDistractions(sortedDist);
+
             // 2. Tasks Completed (Regular + Scheduled)
             const tasks = getStorage(STORAGE_KEYS.TASKS, []);
             const scheduled = getStorage(STORAGE_KEYS.SCHEDULED_TASKS, []);
@@ -46,18 +59,25 @@ const Home = () => {
 
             const totalWorkTime = completedTime + partialTime;
             const tasksDoneCount = allCompleted.length;
-            const pointsScored = (tasksDoneCount * 10) + (todaysWorkLogs.length * 2);
+            const pointsScored = (tasksDoneCount * 10) + (todaysWorkLogs.length * 2); // Approximation if needed, but we rely on stored points for global. Live snapshot for Today.
 
-            // 4. Scores
+            // 4. Scores & Statement
             let workScore = 0;
             let procrastinationScore = 0;
             const totalActiveTime = totalWorkTime + distTime;
+            let statement = "Ready to start?";
 
             if (totalActiveTime > 0) {
                 const procScore = Math.round((distTime / totalActiveTime) * 100);
                 procrastinationScore = procScore;
                 workScore = 100 - procScore;
+
+                if (workScore >= 80) statement = "You are on fire! 🔥 Highly Focused.";
+                else if (workScore >= 50) statement = "Good flow. Keep working! 💪";
+                else if (workScore >= 30) statement = "Distractions are creeping in. ⚠️";
+                else statement = "Procrastination is winning. Fight back! 🛡️";
             }
+            setDailyStatement(statement);
 
             setLastReflection({
                 date: new Date().toISOString(),
@@ -89,10 +109,29 @@ const Home = () => {
                         <Trophy className="text-secondary" size={20} />
                         Your Progress
                     </h3>
-                    <ul style={{ paddingLeft: '1.5rem', color: 'var(--color-text-secondary)', lineHeight: '1.6' }}>
-                        <li><strong>{streak}</strong> Day Streak</li>
+
+                    <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'var(--color-bg-accent)', borderRadius: 'var(--radius-md)', fontWeight: '500', color: 'var(--color-primary)' }}>
+                        {dailyStatement}
+                    </div>
+
+                    <ul style={{ paddingLeft: '1.5rem', color: 'var(--color-text-secondary)', lineHeight: '1.6', marginBottom: '1rem' }}>
+                        <li><strong>{streak}</strong> Total Days Active</li>
                         <li><strong>{points}</strong> Focus Points</li>
                     </ul>
+
+                    {topDistractions.length > 0 && (
+                        <div>
+                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--color-text-primary)' }}>Top Distractions Today:</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                {topDistractions.map((d, i) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fef2f2', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #fecaca' }}>
+                                        <span style={{ color: '#ef4444', fontWeight: '500' }}>{d.name}</span>
+                                        <span style={{ fontWeight: 'bold', color: '#b91c1c' }}>{d.duration}m</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div style={{ marginTop: '2rem' }}>
