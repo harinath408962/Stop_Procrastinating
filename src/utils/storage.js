@@ -107,4 +107,12 @@ export const addPoints = (amount) => {
     stats.totalPoints += amount;
     setStorage(STORAGE_KEYS.USER_STATS, stats);
     return stats;
-}
+};
+
+export const clearAllStorage = () => {
+    Object.values(STORAGE_KEYS).forEach(key => {
+        localStorage.removeItem(key);
+    });
+    // Also clear user name if stored separately
+    localStorage.removeItem('sp_user_name');
+};

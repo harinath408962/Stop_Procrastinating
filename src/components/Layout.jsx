@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, BarChart2, Calendar, Settings, ShieldAlert, TrendingUp, LogIn, User } from 'lucide-react';
-import { getStorage, STORAGE_KEYS } from '../utils/storage';
+import { getStorage, STORAGE_KEYS, clearAllStorage } from '../utils/storage';
 import { auth } from '../utils/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 
@@ -18,6 +18,7 @@ const Layout = ({ children }) => {
     }, []);
 
     const handleSignOut = () => {
+        clearAllStorage();
         signOut(auth);
     };
 

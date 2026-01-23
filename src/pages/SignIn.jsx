@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import { auth, googleProvider, db } from '../utils/firebase';
 import { signInWithPopup } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { getStorage, STORAGE_KEYS, setStorage } from '../utils/storage';
+import { getStorage, STORAGE_KEYS, setStorage, clearAllStorage } from '../utils/storage';
 import { LogIn, Loader } from 'lucide-react';
 
 const SignIn = () => {
@@ -25,6 +25,9 @@ const SignIn = () => {
 
             if (docSnap.exists()) {
                 // User exists: Pull data from cloud and merge/overwrite local
+                // FIRST: Clear local storage to avoid bleeding previous user's data
+                clearAllStorage();
+
                 const cloudData = docSnap.data();
 
                 // For simplicity in this v1, Cloud is Truth for existing users
