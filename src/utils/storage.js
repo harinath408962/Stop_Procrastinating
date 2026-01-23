@@ -6,6 +6,7 @@ export const STORAGE_KEYS = {
     TASKS: 'sp_tasks',
     SCHEDULED_TASKS: 'sp_scheduled_tasks',
     DISTRACTION_LOGS: 'sp_distraction_logs',
+    WORK_LOGS: 'sp_work_logs',
     REFLECTIONS: 'sp_daily_reflections',
     USER_STATS: 'sp_user_stats'
 };

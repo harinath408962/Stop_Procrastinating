@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { getStorage, setStorage, STORAGE_KEYS } from '../utils/storage';
-import { Calendar as CalIcon, Plus, AlertCircle, ArrowLeft, Zap, List } from 'lucide-react';
+import { getStorage, setStorage, STORAGE_KEYS, addPoints } from '../utils/storage';
+import { Calendar as CalIcon, Plus, AlertCircle, ArrowLeft, Zap, List, Save, X } from 'lucide-react';
 
 const Schedule = () => {
     const navigate = useNavigate();
     const [scheduledTasks, setScheduledTasks] = useState([]);
     const [dailyTasks, setDailyTasks] = useState([]);
+
+    // Partial Progress State
+    const [loggingTask, setLoggingTask] = useState(null);
+    const [logTime, setLogTime] = useState('');
 
     // UI Toggles
     const [showScheduleForm, setShowScheduleForm] = useState(false);
@@ -39,6 +43,33 @@ const Schedule = () => {
         setScheduledTasks(getStorage(STORAGE_KEYS.SCHEDULED_TASKS, []));
         setDailyTasks(getStorage(STORAGE_KEYS.TASKS, []));
     }, []);
+
+    const handleLogWork = (e) => {
+        e.preventDefault();
+        if (!loggingTask || !logTime) return;
+
+        const time = parseInt(logTime);
+        if (isNaN(time) || time <= 0) return;
+
+        const newLog = {
+            id: Date.now().toString(),
+            taskId: loggingTask.id,
+            taskTitle: loggingTask.title || loggingTask.name,
+            duration: time,
+            date: new Date().toISOString()
+        };
+
+        const existingLogs = getStorage(STORAGE_KEYS.WORK_LOGS, []);
+        setStorage(STORAGE_KEYS.WORK_LOGS, [...existingLogs, newLog]);
+
+        // Add small points
+        addPoints(2);
+
+        // Reset
+        setLoggingTask(null);
+        setLogTime('');
+        alert(`Logged ${time} mins of work! Keep it up.`);
+    };
 
     // Handlers for Schedule Future Task
     const handleScheduleSubmit = (e) => {
@@ -354,7 +385,41 @@ const Schedule = () => {
                                         >
                                             Task Done
                                         </button>
+                                        <button
+                                            className="btn-secondary"
+                                            style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
+                                            onClick={() => setLoggingTask(task)}
+                                        >
+                                            Done some work
+                                        </button>
                                     </div>
+
+                                    {/* Logging Form */}
+                                    {loggingTask?.id === task.id && (
+                                        <div style={{ marginTop: '1rem', padding: '1rem', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)' }}>
+                                            <h4 style={{ margin: '0 0 0.5rem' }}>Log Work (Not Done Yet)</h4>
+                                            <form onSubmit={handleLogWork} style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <input
+                                                    type="number"
+                                                    placeholder="Mins"
+                                                    value={logTime}
+                                                    onChange={e => setLogTime(e.target.value)}
+                                                    style={{ width: '80px', padding: '0.25rem' }}
+                                                    autoFocus
+                                                />
+                                                <button type="submit" className="btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
+                                                    <Save size={14} /> Save
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setLoggingTask(null); setLogTime(''); }}
+                                                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)' }}
+                                                >
+                                                    <X size={18} />
+                                                </button>
+                                            </form>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}

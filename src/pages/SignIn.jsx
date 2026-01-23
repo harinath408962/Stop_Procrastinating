@@ -55,7 +55,7 @@ const SignIn = () => {
             navigate('/');
         } catch (err) {
             console.error("Login Result Error:", err);
-            setError("Failed to sign in. Please try again.");
+            setError(`Failed to sign in: ${err.message}`);
         } finally {
             setLoading(false);
         }

@@ -2,28 +2,39 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { getStorage, setStorage, STORAGE_KEYS } from '../utils/storage';
-import { PieChart, Clock, Target, Calendar, CheckCircle, Trophy, ArrowLeft } from 'lucide-react';
+import { PieChart, Clock, Target, Calendar, CheckCircle, Trophy, ArrowLeft, AlertTriangle } from 'lucide-react';
 
 const Reflection = () => {
     const navigate = useNavigate();
-    const [procrastinationScore, setProcrastinationScore] = useState(30);
+    const [procrastinationScore, setProcrastinationScore] = useState(0);
+    const [workScore, setWorkScore] = useState(0);
     const [tomorrowGoal, setTomorrowGoal] = useState('');
     const [todayDistractions, setTodayDistractions] = useState([]);
-    const [tasksDoneCount, setTasksDoneCount] = useState(0);
-    const [pointsScored, setPointsScored] = useState(0);
+    const [todayTasks, setTodayTasks] = useState([]);
+    const [todayWorkLogs, setTodayWorkLogs] = useState([]);
     const [submitted, setSubmitted] = useState(false);
 
+    // Metrics
+    const [totalTaskTime, setTotalTaskTime] = useState(0);
+    const [totalDistractionTime, setTotalDistractionTime] = useState(0);
+    const [tasksDoneCount, setTasksDoneCount] = useState(0);
+    const [pointsScored, setPointsScored] = useState(0);
+
     useEffect(() => {
-        // Fetch today's distraction logs
-        const logs = getStorage(STORAGE_KEYS.DISTRACTION_LOGS, []);
         const today = new Date().setHours(0, 0, 0, 0);
+
+        // 1. Fetch Today's Distractions
+        const logs = getStorage(STORAGE_KEYS.DISTRACTION_LOGS, []);
         const todaysLogs = logs.filter(log => {
             const logDate = new Date(log.date).setHours(0, 0, 0, 0);
             return logDate === today;
         });
         setTodayDistractions(todaysLogs);
 
-        // Calculate Tasks Done Today
+        const distTime = todaysLogs.reduce((acc, curr) => acc + parseInt(curr.duration || 0), 0);
+        setTotalDistractionTime(distTime);
+
+        // 2. Fetch Tasks Done Today
         const tasks = getStorage(STORAGE_KEYS.TASKS, []);
         const scheduled = getStorage(STORAGE_KEYS.SCHEDULED_TASKS, []);
 
@@ -37,12 +48,40 @@ const Reflection = () => {
             return new Date(t.completedAt).setHours(0, 0, 0, 0) === today;
         });
 
-        const totalDone = completedTasks.length + completedScheduled.length;
-        setTasksDoneCount(totalDone);
-        setPointsScored(totalDone * 10); // Assuming 10 points per task
-    }, []);
+        const allCompleted = [...completedTasks, ...completedScheduled];
+        setTodayTasks(allCompleted);
 
-    const workScore = 100 - procrastinationScore;
+        // 2.5 Fetch Partial Work Logs
+        const workLogs = getStorage(STORAGE_KEYS.WORK_LOGS, []);
+        const todaysWorkLogs = workLogs.filter(log => {
+            const logDate = new Date(log.date).setHours(0, 0, 0, 0);
+            return logDate === today;
+        });
+        setTodayWorkLogs(todaysWorkLogs);
+
+        const completedTime = allCompleted.reduce((acc, curr) => acc + (parseInt(curr.timeTaken) || 0), 0);
+        const partialTime = todaysWorkLogs.reduce((acc, curr) => acc + parseInt(curr.duration || 0), 0);
+
+        const totalWorkTime = completedTime + partialTime;
+        setTotalTaskTime(totalWorkTime);
+
+        const totalDone = allCompleted.length;
+        setTasksDoneCount(totalDone);
+        setPointsScored((totalDone * 10) + (todaysWorkLogs.length * 2)); // Bonus for logged sessions
+
+        // 3. Calculate Scores
+        const totalActiveTime = totalWorkTime + distTime;
+        if (totalActiveTime > 0) {
+            const procScore = Math.round((distTime / totalActiveTime) * 100);
+            setProcrastinationScore(procScore);
+            setWorkScore(100 - procScore);
+        } else {
+            // No data logged
+            setWorkScore(0);
+            setProcrastinationScore(0);
+        }
+
+    }, []);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -54,8 +93,9 @@ const Reflection = () => {
             workScore,
             tomorrowGoal,
             distractionCount: todayDistractions.length,
-            distractionTime: todayDistractions.reduce((acc, curr) => acc + parseInt(curr.duration || 0), 0),
+            distractionTime: totalDistractionTime,
             tasksDoneCount,
+            taskTime: totalTaskTime,
             pointsScored
         };
 
@@ -110,75 +150,101 @@ const Reflection = () => {
                     </button>
                     <h2 style={{ margin: 0 }}>End of Day Reflection</h2>
                 </div>
-                <p style={{ color: 'var(--color-text-secondary)', marginBottom: '2rem' }}>Be honest. Data helps you improve.</p>
 
                 <form onSubmit={handleSubmit} className="card">
 
-                    {/* Metrics Section */}
-                    <div style={{ marginBottom: '2rem' }}>
-                        <label style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>Procrastination Level</span>
-                            <span style={{ fontWeight: 'bold', color: 'var(--color-warning)' }}>{procrastinationScore}%</span>
-                        </label>
-                        <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            step="5"
-                            value={procrastinationScore}
-                            onChange={e => setProcrastinationScore(parseInt(e.target.value))}
-                            style={{ width: '100%', accentColor: 'var(--color-warning)' }}
-                        />
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                            <span>Focused</span>
-                            <span>Distracted</span>
-                        </div>
-                    </div>
-
+                    {/* 1. Overall Work Score */}
                     <div style={{
-                        marginBottom: '2rem',
+                        marginBottom: '1.5rem',
                         padding: '1.5rem',
                         background: '#f0fdf4',
                         borderRadius: 'var(--radius-md)',
                         border: '1px solid #bbf7d0',
                         textAlign: 'center'
                     }}>
-                        <div style={{ fontSize: '0.9rem', color: '#166534', marginBottom: '0.25rem' }}>Overall Work Score</div>
-                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#15803d' }}>{workScore}%</div>
+                        <div style={{ fontSize: '0.9rem', color: '#166534', marginBottom: '0.25rem' }}>Overall Focus Score</div>
+                        <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#15803d' }}>{workScore}%</div>
                     </div>
 
-                    {/* Achievements Section */}
+                    {/* 2. Procrastination Score */}
+                    <div style={{
+                        marginBottom: '2rem',
+                        padding: '1rem',
+                        background: '#fef2f2',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid #fecaca',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                    }}>
+                        <span style={{ color: '#991b1b', fontWeight: '500' }}>Procrastination Level</span>
+                        <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>{procrastinationScore}%</span>
+                    </div>
+
+                    {/* 3. Time Spent Stats */}
+                    <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Time Breakdown</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
                         <div className="card" style={{ padding: '1rem', textAlign: 'center', background: 'var(--color-bg-secondary)' }}>
                             <CheckCircle size={24} style={{ color: 'var(--color-success)', marginBottom: '0.5rem' }} />
-                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{tasksDoneCount}</div>
-                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Tasks Done</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{totalTaskTime}m</div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Work Time</div>
                         </div>
                         <div className="card" style={{ padding: '1rem', textAlign: 'center', background: 'var(--color-bg-secondary)' }}>
-                            <Trophy size={24} style={{ color: 'var(--color-warning)', marginBottom: '0.5rem' }} />
-                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{pointsScored}</div>
-                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Points Scored</div>
+                            <AlertTriangle size={24} style={{ color: 'var(--color-warning)', marginBottom: '0.5rem' }} />
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{totalDistractionTime}m</div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Distracted</div>
                         </div>
                     </div>
 
-                    {/* Distraction Summary */}
+                    {/* 4. Today's Data List */}
                     <div style={{ marginBottom: '2rem' }}>
-                        <h3 style={{ fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Clock size={16} /> Today's Distractions
-                        </h3>
-                        {todayDistractions.length === 0 ? (
-                            <p style={{ color: 'var(--color-text-secondary)', fontStyle: 'italic' }}>No distractions logged today.</p>
+                        <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Today's Activity Log</h3>
+
+                        <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Today's Activity Log</h3>
+
+                        {(todayTasks.length === 0 && todayDistractions.length === 0 && todayWorkLogs.length === 0) ? (
+                            <p style={{ color: 'var(--color-text-secondary)', fontStyle: 'italic' }}>No activity recorded yet.</p>
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                {todayDistractions.map(log => (
-                                    <div key={log.id} style={{
+                                {/* Tasks */}
+                                {todayTasks.map((t, i) => (
+                                    <div key={`task-${i}`} style={{
                                         display: 'flex',
                                         justifyContent: 'space-between',
                                         padding: '0.75rem',
-                                        background: 'var(--color-bg-secondary)',
-                                        borderRadius: 'var(--radius-sm)'
+                                        background: 'rgba(34, 197, 94, 0.1)',
+                                        borderRadius: 'var(--radius-sm)',
+                                        borderLeft: '4px solid var(--color-success)'
                                     }}>
-                                        <span>{log.app} <small style={{ color: 'var(--color-text-secondary)' }}>({log.reasons.join(', ')})</small></span>
+                                        <span>{t.title || t.name} <strong style={{ color: 'var(--color-success)' }}>(Done)</strong></span>
+                                        <strong>{t.timeTaken || 0}m</strong>
+                                    </div>
+                                ))}
+                                {/* Partial Logs */}
+                                {todayWorkLogs.map((log, i) => (
+                                    <div key={`log-${i}`} style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        padding: '0.75rem',
+                                        background: 'rgba(59, 130, 246, 0.1)',
+                                        borderRadius: 'var(--radius-sm)',
+                                        borderLeft: '4px solid #3b82f6'
+                                    }}>
+                                        <span>{log.taskTitle} <small>(Work Log)</small></span>
+                                        <strong>{log.duration}m</strong>
+                                    </div>
+                                ))}
+                                {/* Distractions */}
+                                {todayDistractions.map((log, i) => (
+                                    <div key={`dist-${i}`} style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        padding: '0.75rem',
+                                        background: 'rgba(239, 68, 68, 0.1)',
+                                        borderRadius: 'var(--radius-sm)',
+                                        borderLeft: '4px solid var(--color-danger)'
+                                    }}>
+                                        <span>{log.app} <small>({log.reasons.join(', ')})</small></span>
                                         <strong>{log.duration}m</strong>
                                     </div>
                                 ))}
@@ -186,9 +252,9 @@ const Reflection = () => {
                         )}
                     </div>
 
-                    {/* Tomorrow's Goal */}
+                    {/* 5. Goal for Tomorrow */}
                     <div style={{ marginBottom: '2rem' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                             <Target size={18} /> Goal for Tomorrow
                         </label>
                         <input
@@ -196,10 +262,11 @@ const Reflection = () => {
                             value={tomorrowGoal}
                             onChange={e => setTomorrowGoal(e.target.value)}
                             placeholder="e.g. Finish the Math Chapter without phone"
+                            style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #cbd5e1' }}
                         />
                     </div>
 
-                    <button type="submit" className="btn-primary" style={{ width: '100%' }}>Save & Close Day</button>
+                    <button type="submit" className="btn-primary" style={{ width: '100%', padding: '1rem' }}>Save & Close Day</button>
                 </form>
             </div>
         </Layout>

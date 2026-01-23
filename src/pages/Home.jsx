@@ -19,11 +19,59 @@ const Home = () => {
         setStreak(stats.currentStreak);
         setPoints(stats.totalPoints);
 
-        // Load last reflection
-        const history = getStorage(STORAGE_KEYS.REFLECTIONS, []);
-        if (history.length > 0) {
-            setLastReflection(history[0]); // Assuming newest first
-        }
+        // Calculate Live Snapshot for Today
+        const calculateLiveStats = () => {
+            const today = new Date().setHours(0, 0, 0, 0);
+
+            // 1. Logs & Distractions
+            const distLogs = getStorage(STORAGE_KEYS.DISTRACTION_LOGS, []);
+            const todaysDistractions = distLogs.filter(l => new Date(l.date).setHours(0, 0, 0, 0) === today);
+            const distTime = todaysDistractions.reduce((acc, curr) => acc + parseInt(curr.duration || 0), 0);
+            const distCount = todaysDistractions.length;
+
+            // 2. Tasks Completed (Regular + Scheduled)
+            const tasks = getStorage(STORAGE_KEYS.TASKS, []);
+            const scheduled = getStorage(STORAGE_KEYS.SCHEDULED_TASKS, []);
+
+            const completedTasks = tasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt).setHours(0, 0, 0, 0) === today);
+            const completedSched = scheduled.filter(t => t.completed && t.completedAt && new Date(t.completedAt).setHours(0, 0, 0, 0) === today);
+            const allCompleted = [...completedTasks, ...completedSched];
+
+            const completedTime = allCompleted.reduce((acc, curr) => acc + (parseInt(curr.timeTaken) || 0), 0);
+
+            // 3. Partial Work Logs
+            const workLogs = getStorage(STORAGE_KEYS.WORK_LOGS, []);
+            const todaysWorkLogs = workLogs.filter(l => new Date(l.date).setHours(0, 0, 0, 0) === today);
+            const partialTime = todaysWorkLogs.reduce((acc, curr) => acc + parseInt(curr.duration || 0), 0);
+
+            const totalWorkTime = completedTime + partialTime;
+            const tasksDoneCount = allCompleted.length;
+            const pointsScored = (tasksDoneCount * 10) + (todaysWorkLogs.length * 2);
+
+            // 4. Scores
+            let workScore = 0;
+            let procrastinationScore = 0;
+            const totalActiveTime = totalWorkTime + distTime;
+
+            if (totalActiveTime > 0) {
+                const procScore = Math.round((distTime / totalActiveTime) * 100);
+                procrastinationScore = procScore;
+                workScore = 100 - procScore;
+            }
+
+            setLastReflection({
+                date: new Date().toISOString(),
+                workScore,
+                procrastinationScore,
+                tasksDoneCount,
+                pointsScored,
+                distractionTime: distTime,
+                distractionCount: distCount,
+                isLive: true
+            });
+        };
+
+        calculateLiveStats();
     }, []);
 
     return (
@@ -62,7 +110,7 @@ const Home = () => {
                     <div style={{ marginTop: '3rem', textAlign: 'left' }}>
                         <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-secondary)' }}>
                             <Activity size={18} />
-                            {new Date(lastReflection.date).toDateString() === new Date().toDateString() ? 'Today\'s Snapshot' : 'Yesterday\'s Results'}
+                            Today's Live Snapshot
                         </h3>
 
                         <div className="card">

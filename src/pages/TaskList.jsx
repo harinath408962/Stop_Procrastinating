@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { getStorage, STORAGE_KEYS } from '../utils/storage';
-import { Plus, CheckCircle, Clock, AlertCircle, ArrowLeft } from 'lucide-react';
+import { getStorage, setStorage, STORAGE_KEYS, addPoints } from '../utils/storage';
+import { Plus, CheckCircle, Clock, AlertCircle, ArrowLeft, Hourglass, Save, X } from 'lucide-react';
 
 const TaskList = () => {
     const navigate = useNavigate();
     const [tasks, setTasks] = useState([]);
     const [mood, setMood] = useState(null);
     const [activePlans, setActivePlans] = useState([]);
+
+    // Partial Progress State
+    // Partial Progress State Removed
+    // const [loggingTask, setLoggingTask] = useState(null);
+    // const [logTime, setLogTime] = useState('');
 
     useEffect(() => {
         const currentMood = getStorage(STORAGE_KEYS.USER_MOOD);
@@ -33,6 +38,8 @@ const TaskList = () => {
         setActivePlans(activeItems);
 
     }, []);
+
+
 
     return (
         <Layout>
@@ -122,7 +129,7 @@ const TaskList = () => {
                     </div>
                 )}
             </div>
-        </Layout>
+        </Layout >
     );
 };
 
