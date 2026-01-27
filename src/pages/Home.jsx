@@ -59,7 +59,7 @@ const Home = () => {
 
             const totalWorkTime = completedTime + partialTime;
             const tasksDoneCount = allCompleted.length;
-            const pointsScored = (tasksDoneCount * 10) + (todaysWorkLogs.length * 2); // Approximation if needed, but we rely on stored points for global. Live snapshot for Today.
+            const pointsScored = (tasksDoneCount * 10) + (todaysWorkLogs.length * 2);
 
             // 4. Scores & Statement
             let workScore = 0;
@@ -79,6 +79,13 @@ const Home = () => {
             }
             setDailyStatement(statement);
 
+            // Retrieve Tomorrow's Goal from the LAST VALID reflection
+            const history = getStorage(STORAGE_KEYS.REFLECTIONS, []);
+            // Sort by date desc
+            const sortedHistory = history.sort((a, b) => new Date(b.date) - new Date(a.date));
+            const latest = sortedHistory[0];
+            const tomorrowGoal = latest ? latest.tomorrowGoal : null;
+
             setLastReflection({
                 date: new Date().toISOString(),
                 workScore,
@@ -87,6 +94,7 @@ const Home = () => {
                 pointsScored,
                 distractionTime: distTime,
                 distractionCount: distCount,
+                tomorrowGoal: tomorrowGoal,
                 isLive: true
             });
         };

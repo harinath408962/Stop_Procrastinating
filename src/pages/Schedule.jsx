@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { getStorage, setStorage, STORAGE_KEYS, addPoints } from '../utils/storage';
-import { Calendar as CalIcon, Plus, AlertCircle, ArrowLeft, Zap, List, Save, X } from 'lucide-react';
+import { getStorage, setStorage, STORAGE_KEYS, addPoints, updateStreak } from '../utils/storage';
+import { Calendar as CalIcon, Plus, AlertCircle, ArrowLeft, Zap, List, Save, X, Camera, Upload, CheckCircle } from 'lucide-react';
+import { useRef } from 'react';
+import TimeSelector from '../components/TimeSelector';
+import TimeOfDaySelector from '../components/TimeOfDaySelector';
+import { logEvent } from '../utils/analytics';
 
 const Schedule = () => {
     const navigate = useNavigate();
@@ -16,6 +20,15 @@ const Schedule = () => {
     // UI Toggles
     const [showScheduleForm, setShowScheduleForm] = useState(false);
     const [showDailyTaskForm, setShowDailyTaskForm] = useState(false);
+    const [showAdhocForm, setShowAdhocForm] = useState(false);
+
+    // Ad-hoc Work State
+    const [adhocName, setAdhocName] = useState('');
+    const [adhocTime, setAdhocTime] = useState('');
+    const [proofImage, setProofImage] = useState(null);
+    const fileInputRef = useRef(null);
+    const cameraInputRef = useRef(null);
+    const [timeOfDay, setTimeOfDay] = useState('morning');
 
     // Schedule Form Data
     const [scheduleFormData, setScheduleFormData] = useState({
@@ -106,6 +119,59 @@ const Schedule = () => {
         });
     };
 
+    const handleFileSelect = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProofImage(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleAdhocSubmit = (e) => {
+        e.preventDefault();
+
+        // 1. Create Task & Mark Complete
+        const tasks = getStorage(STORAGE_KEYS.TASKS, []);
+        const newTask = {
+            id: Date.now().toString(),
+            title: adhocName,
+            smallStep: 'Ad-hoc Logged',
+            time: adhocTime,
+            completed: true,
+            completedAt: new Date().toISOString(),
+            timeTaken: parseInt(adhocTime) || 0,
+            proofImage,
+            isAdhoc: true
+        };
+        setStorage(STORAGE_KEYS.TASKS, [newTask, ...tasks]);
+        setDailyTasks([newTask, ...tasks]);
+
+        // 2. Gamification
+        const points = 10;
+        addPoints(points);
+        updateStreak();
+
+        // 3. Log Event
+        logEvent('task_complete', {
+            task_id: newTask.id,
+            task_title: newTask.title,
+            actual_time_spent: parseInt(adhocTime) || 0,
+            points_earned: points,
+            has_proof: !!proofImage,
+            is_adhoc: true,
+            overrideTimeOfDay: timeOfDay
+        });
+
+        alert(`Saved! +${points} Points.`);
+        setShowAdhocForm(false);
+        setAdhocName('');
+        setAdhocTime('');
+        setProofImage(null);
+    };
+
     return (
         <Layout>
             <div className="container">
@@ -143,7 +209,7 @@ const Schedule = () => {
                         transition: 'all 0.2s',
                         padding: '2rem 1rem'
                     }}
-                        onClick={() => { setShowDailyTaskForm(!showDailyTaskForm); setShowScheduleForm(false); }}>
+                        onClick={() => { setShowDailyTaskForm(!showDailyTaskForm); setShowScheduleForm(false); setShowAdhocForm(false); }}>
                         <div style={{
                             background: 'var(--color-bg-accent)',
                             width: '48px',
@@ -170,7 +236,7 @@ const Schedule = () => {
                         border: showScheduleForm ? '2px solid var(--color-primary)' : '1px solid transparent',
                         padding: '2rem 1rem'
                     }}
-                        onClick={() => { setShowScheduleForm(!showScheduleForm); setShowDailyTaskForm(false); }}>
+                        onClick={() => { setShowScheduleForm(!showScheduleForm); setShowDailyTaskForm(false); setShowAdhocForm(false); }}>
                         <div style={{
                             background: '#f0f9ff',
                             width: '48px',
@@ -297,11 +363,70 @@ const Schedule = () => {
                     </div>
                 )}
 
+                {/* Ad-hoc Work Form */}
+                {showAdhocForm && (
+                    <div style={{ animation: 'fadeIn 0.3s ease-in-out' }}>
+                        <h3 style={{ marginBottom: '1rem' }}>Log Unplanned Work</h3>
+                        <form onSubmit={handleAdhocSubmit} className="card" style={{ marginBottom: '3rem', borderLeft: '4px solid #8b5cf6' }}>
+                            <div style={{ marginBottom: '1rem' }}>
+                                <label>What did you do?</label>
+                                <input required value={adhocName} onChange={e => setAdhocName(e.target.value)} placeholder="e.g. Helper a friend" autoFocus />
+                            </div>
+
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label>Time Taken (minutes)</label>
+                                <TimeSelector value={adhocTime} onChange={setAdhocTime} />
+                            </div>
+
+                            <div style={{ marginBottom: '2rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem' }}>Upload Proof (Optional)</label>
+                                <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} style={{ display: 'none' }} />
+                                <input type="file" accept="image/*" capture="environment" ref={cameraInputRef} onChange={handleFileSelect} style={{ display: 'none' }} />
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <div onClick={() => fileInputRef.current?.click()} style={{ border: '2px dashed #cbd5e1', borderRadius: 'var(--radius-md)', padding: '1rem', textAlign: 'center', cursor: 'pointer', background: proofImage ? '#f0fdf4' : 'transparent' }}>
+                                        <Upload size={24} style={{ marginBottom: '0.5rem' }} />
+                                        <div>Upload</div>
+                                    </div>
+                                    <div onClick={() => cameraInputRef.current?.click()} style={{ border: '2px dashed #cbd5e1', borderRadius: 'var(--radius-md)', padding: '1rem', textAlign: 'center', cursor: 'pointer', background: proofImage ? '#f0fdf4' : 'transparent' }}>
+                                        <Camera size={24} style={{ marginBottom: '0.5rem' }} />
+                                        <div>Camera</div>
+                                    </div>
+                                </div>
+                                {proofImage && <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--color-success)', textAlign: 'center' }}>Proof Attached!</div>}
+                            </div>
+
+                            <TimeOfDaySelector value={timeOfDay} onChange={setTimeOfDay} />
+
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <button type="button" onClick={() => setShowAdhocForm(false)} className="btn-secondary" style={{ flex: 1 }}>Cancel</button>
+                                <button type="submit" className="btn-primary" style={{ flex: 1 }}>Save Work</button>
+                            </div>
+                        </form>
+                    </div>
+                )}
+
                 {/* List of Plans */}
                 <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
                         <List size={20} className="text-secondary" />
                         <h3 style={{ margin: 0, color: 'var(--color-text-secondary)' }}>Your Plans</h3>
+                        <div style={{ flex: 1 }}></div>
+                        <button
+                            onClick={() => { setShowAdhocForm(!showAdhocForm); setShowDailyTaskForm(false); setShowScheduleForm(false); }}
+                            style={{
+                                background: 'var(--color-bg-secondary)',
+                                border: 'none',
+                                padding: '0.5rem 1rem',
+                                borderRadius: 'var(--radius-full)',
+                                color: 'var(--color-primary)',
+                                fontSize: '0.85rem',
+                                fontWeight: '500',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            + Log Other Task
+                        </button>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -436,7 +561,8 @@ const Schedule = () => {
                     </div>
                 </div>
             </div>
-        </Layout>
+
+        </Layout >
     );
 };
 

@@ -1,10 +1,22 @@
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { setStorage, STORAGE_KEYS } from '../utils/storage';
+import { logEvent } from '../utils/analytics';
 import { Zap, BatteryLow, Coffee } from 'lucide-react';
+import TimeOfDaySelector from '../components/TimeOfDaySelector';
+import { useState, useEffect } from 'react';
 
 const MoodSelect = () => {
     const navigate = useNavigate();
+    const [timeOfDay, setTimeOfDay] = useState('morning');
+
+    useEffect(() => {
+        const h = new Date().getHours();
+        if (h >= 5 && h < 12) setTimeOfDay('morning');
+        else if (h >= 12 && h < 17) setTimeOfDay('afternoon');
+        else if (h >= 17 && h < 21) setTimeOfDay('evening');
+        else setTimeOfDay('night');
+    }, []);
 
     const moods = [
         { id: 'focused', label: 'Focused', icon: <Zap size={32} />, color: 'var(--color-success)', desc: "I'm ready to tackle something big." },
@@ -14,13 +26,16 @@ const MoodSelect = () => {
 
     const handleSelect = (moodId) => {
         setStorage(STORAGE_KEYS.USER_MOOD, moodId);
+        logEvent('mood_update', { mood: moodId, overrideTimeOfDay: timeOfDay });
         navigate('/tasks');
     };
 
     return (
         <Layout>
             <div className="container">
-                <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>How are you feeling right now?</h2>
+                <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>How are you feeling right now?</h2>
+
+                <TimeOfDaySelector value={timeOfDay} onChange={setTimeOfDay} />
 
                 <div style={{ display: 'grid', gap: '1rem' }}>
                     {moods.map((mood) => (

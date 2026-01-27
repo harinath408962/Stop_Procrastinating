@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { getStorage, setStorage, STORAGE_KEYS, addPoints, updateStreak } from '../utils/storage';
+import { logEvent } from '../utils/analytics';
 import { CheckCircle, Upload, Camera } from 'lucide-react';
+import TimeOfDaySelector from '../components/TimeOfDaySelector';
 
 const TaskComplete = () => {
     const { taskId } = useParams();
@@ -16,6 +18,16 @@ const TaskComplete = () => {
     const cameraInputRef = useRef(null);
     const [completed, setCompleted] = useState(false);
     const [earnedPoints, setEarnedPoints] = useState(0);
+
+    const [timeOfDay, setTimeOfDay] = useState('morning');
+
+    useEffect(() => {
+        const h = new Date().getHours();
+        if (h >= 5 && h < 12) setTimeOfDay('morning');
+        else if (h >= 12 && h < 17) setTimeOfDay('afternoon');
+        else if (h >= 17 && h < 21) setTimeOfDay('evening');
+        else setTimeOfDay('night');
+    }, []);
 
     useEffect(() => {
         const tasks = getStorage(STORAGE_KEYS.TASKS, []);
@@ -106,6 +118,16 @@ const TaskComplete = () => {
         addPoints(points);
         updateStreak();
 
+        logEvent('task_complete', {
+            task_id: taskId,
+            task_title: task.title,
+            actual_time_spent: parseInt(timeTaken) || 0,
+            points_earned: points,
+            has_proof: !!proofImage,
+            learning_note: learning,
+            overrideTimeOfDay: timeOfDay
+        });
+
         setEarnedPoints(points);
         setCompleted(true);
     };
@@ -151,6 +173,8 @@ const TaskComplete = () => {
                                 style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #cbd5e1', marginTop: '0.5rem' }}
                             />
                         </div>
+
+                        <TimeOfDaySelector value={timeOfDay} onChange={setTimeOfDay} />
 
 
 

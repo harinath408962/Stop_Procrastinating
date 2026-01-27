@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { getStorage, setStorage, STORAGE_KEYS } from '../utils/storage';
-import { ShieldAlert, Settings, Plus, X, ArrowLeft } from 'lucide-react';
+import { getStorage, setStorage, STORAGE_KEYS, addPoints, updateStreak } from '../utils/storage';
+import { logEvent } from '../utils/analytics';
+import { ShieldAlert, Settings, Plus, X, ArrowLeft, Camera, Upload, CheckCircle } from 'lucide-react';
+import { useRef } from 'react';
+import TimeOfDaySelector from '../components/TimeOfDaySelector';
+import TimeSelector from '../components/TimeSelector';
 
 const DistractionLimiter = () => {
     const navigate = useNavigate();
@@ -14,10 +18,22 @@ const DistractionLimiter = () => {
     const [newReason, setNewReason] = useState('');
     const [reasonsList, setReasonsList] = useState([]);
 
-    // Logging State
+    // Logging State (Distraction)
     const [selectedDistraction, setSelectedDistraction] = useState(null);
     const [selectedReasons, setSelectedReasons] = useState([]);
     const [timeSpent, setTimeSpent] = useState('');
+
+
+
+    const [timeOfDay, setTimeOfDay] = useState('morning');
+
+    useEffect(() => {
+        const h = new Date().getHours();
+        if (h >= 5 && h < 12) setTimeOfDay('morning');
+        else if (h >= 12 && h < 17) setTimeOfDay('afternoon');
+        else if (h >= 17 && h < 21) setTimeOfDay('evening');
+        else setTimeOfDay('night');
+    }, []);
 
     useEffect(() => {
         // Load defined distractions
@@ -58,6 +74,14 @@ const DistractionLimiter = () => {
             date: new Date().toISOString()
         };
         setStorage(STORAGE_KEYS.DISTRACTION_LOGS, [newLog, ...logs]);
+
+        logEvent('distraction_log', {
+            app: selectedDistraction.name,
+            reasons: selectedReasons,
+            duration: parseInt(timeSpent) || 0,
+            overrideTimeOfDay: timeOfDay
+        });
+
         setMode('success');
     };
 
@@ -102,6 +126,8 @@ const DistractionLimiter = () => {
         );
     }
 
+
+
     if (mode === 'config') {
         return (
             <Layout>
@@ -144,6 +170,8 @@ const DistractionLimiter = () => {
             </Layout>
         )
     }
+
+
 
     if (mode === 'logging') {
         return (
@@ -213,13 +241,10 @@ const DistractionLimiter = () => {
 
                             <div style={{ marginBottom: '1.5rem' }}>
                                 <label>Time Spent (Minutes)</label>
-                                <input
-                                    type="number"
-                                    required
-                                    value={timeSpent}
-                                    onChange={e => setTimeSpent(e.target.value)}
-                                />
+                                <TimeSelector value={timeSpent} onChange={setTimeSpent} />
                             </div>
+
+                            <TimeOfDaySelector value={timeOfDay} onChange={setTimeOfDay} />
 
                             <button type="submit" className="btn-primary" style={{ width: '100%' }}>Save Log</button>
                         </form>
@@ -265,9 +290,11 @@ const DistractionLimiter = () => {
                         Yes, I gave in.
                     </button>
 
+
+
                     <button
                         className="btn-primary"
-                        style={{ padding: '1.5rem', fontSize: '1.25rem', background: '#10b981' }} // Green for No
+                        style={{ padding: '1rem', fontSize: '1.1rem', background: '#10b981' }} // Green for No
                         onClick={() => setMode('calm')}
                     >
                         No, I'm focused.

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { getStorage, STORAGE_KEYS } from '../utils/storage';
+import { generateEventCsv, downloadCsv } from '../utils/exportUtils';
 import BarChart from '../components/BarChart';
 import LineChart from '../components/LineChart';
 import { Download, ArrowLeft } from 'lucide-react';
@@ -35,30 +36,14 @@ const Analysis = () => {
     }, []);
 
     const downloadCSV = () => {
-        if (stats.length === 0) return;
+        const events = getStorage(STORAGE_KEYS.EVENT_LOG, []);
+        if (!events || events.length === 0) {
+            alert("No detailed event data found yet. Start using the app to generate logs!");
+            return;
+        }
 
-        const headers = ['Date', 'Work Score (%)', 'Procrastination Score (%)', 'Points Earned', 'Work Time (m)', 'Distraction Time (m)', 'Tasks Done'];
-        const rows = stats.map(d => [
-            new Date(d.date).toLocaleDateString(),
-            d.workScore,
-            d.procrastinationScore,
-            d.pointsScored || 0,
-            d.taskTime || 0,
-            d.distractionTime || 0,
-            d.tasksDoneCount || 0
-        ]);
-
-        const csvContent = "data:text/csv;charset=utf-8,"
-            + headers.join(",") + "\n"
-            + rows.map(e => e.join(",")).join("\n");
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "procrastination_data.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const csvContent = generateEventCsv(events);
+        downloadCsv(csvContent, `stop_procrastinating_events_${new Date().toISOString().split('T')[0]}.csv`);
     };
 
     return (
@@ -97,7 +82,7 @@ const Analysis = () => {
                             alignItems: 'center',
                             justifyContent: 'center'
                         }}
-                        title="Download Data"
+                        title="Export Detailed Event Logs (CSV)"
                     >
                         <Download size={20} />
                     </button>

@@ -1,23 +1,17 @@
 :root {
-    /* Empathetic Palette */
+    /* Base Palette (Light Default) */
     --color-bg-primary: #f8fafc;
-    /* Very light cool gray */
     --color-bg-secondary: #ffffff;
     --color-bg-accent: #e0e7ff;
-    /* Soft indigo tint */
 
     --color-text-primary: #1e293b;
-    /* Slate 800 */
     --color-text-secondary: #64748b;
-    /* Slate 500 */
     --color-text-accent: #4f46e5;
-    /* Indigo 600 */
 
     --color-primary: #6366f1;
-    /* Indigo 500 */
     --color-primary-hover: #4f46e5;
+
     --color-success: #10b981;
-    /* Emerald 500 */
     --color-warning: #f59e0b;
     --color-danger: #ef4444;
 
@@ -31,6 +25,45 @@
     --radius-full: 9999px;
 
     --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+    /* Layout specific */
+    --header-bg: #ffffff;
+    --nav-bg: #ffffff;
+    --border-color: #e2e8f0;
+}
+
+[data-theme='dark'] {
+    /* Dark Palette */
+    --color-bg-primary: #0f172a;
+    /* Slate 900 */
+    --color-bg-secondary: #1e293b;
+    /* Slate 800 */
+    --color-bg-accent: #334155;
+    /* Slate 700 */
+
+    --color-text-primary: #f1f5f9;
+    /* Slate 100 */
+    --color-text-secondary: #94a3b8;
+    /* Slate 400 */
+    --color-text-accent: #818cf8;
+    /* Indigo 400 */
+
+    --color-primary: #818cf8;
+    /* Indigo 400 - lighter for dark mode */
+    --color-primary-hover: #6366f1;
+
+    --color-success: #34d399;
+    --color-warning: #fbbf24;
+    --color-danger: #f87171;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+
+    /* Layout specific */
+    --header-bg: #1e293b;
+    --nav-bg: #1e293b;
+    --border-color: #334155;
 }
 
 body {

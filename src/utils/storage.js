@@ -8,7 +8,8 @@ export const STORAGE_KEYS = {
     DISTRACTION_LOGS: 'sp_distraction_logs',
     WORK_LOGS: 'sp_work_logs',
     REFLECTIONS: 'sp_daily_reflections',
-    USER_STATS: 'sp_user_stats'
+    USER_STATS: 'sp_user_stats',
+    EVENT_LOG: 'sp_event_log'
 };
 
 const syncToCloud = async (key, value) => {

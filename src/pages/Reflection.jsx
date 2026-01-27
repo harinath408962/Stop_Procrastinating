@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { getStorage, setStorage, STORAGE_KEYS } from '../utils/storage';
+import { logEvent } from '../utils/analytics';
 import { PieChart, Clock, Target, Calendar, CheckCircle, Trophy, ArrowLeft, AlertTriangle } from 'lucide-react';
 
 const Reflection = () => {
@@ -100,6 +101,15 @@ const Reflection = () => {
         };
 
         setStorage(STORAGE_KEYS.REFLECTIONS, [newEntry, ...history]);
+
+        logEvent('diary_entry', {
+            procrastination_score: procrastinationScore,
+            work_score: workScore,
+            tomorrow_goal: tomorrowGoal,
+            total_distraction_time: totalDistractionTime,
+            total_work_time: totalTaskTime
+        });
+
         setSubmitted(true);
     };
 

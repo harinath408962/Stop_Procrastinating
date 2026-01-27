@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { getStorage, setStorage, STORAGE_KEYS } from '../utils/storage';
+import { logEvent } from '../utils/analytics';
 
 import { ArrowLeft } from 'lucide-react';
 
@@ -31,6 +32,11 @@ const AddTask = () => {
         };
 
         setStorage(STORAGE_KEYS.TASKS, [newTask, ...tasks]);
+        logEvent('task_create', {
+            task_id: newTask.id,
+            title: newTask.title,
+            expected_time: formData.time
+        });
         navigate('/tasks');
     };
 

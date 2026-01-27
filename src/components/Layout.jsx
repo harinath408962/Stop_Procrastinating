@@ -1,14 +1,16 @@
 import { useRef, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BarChart2, Calendar, Settings, ShieldAlert, TrendingUp, LogIn, User } from 'lucide-react';
+import { Home, BarChart2, Calendar, Settings, ShieldAlert, TrendingUp, LogIn, User, Sun, Moon } from 'lucide-react';
 import { getStorage, STORAGE_KEYS, clearAllStorage } from '../utils/storage';
 import { auth } from '../utils/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { useTheme } from '../context/ThemeContext';
 
 const Layout = ({ children }) => {
     const location = useLocation();
     const stats = getStorage(STORAGE_KEYS.USER_STATS, { totalPoints: 0, currentStreak: 0 });
     const [user, setUser] = useState(null);
+    const { theme, toggleTheme } = useTheme();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -30,7 +32,10 @@ const Layout = ({ children }) => {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                background: 'white'
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                background: 'var(--header-bg)',
+                color: 'var(--color-text-primary)'
             }}>
                 <Link to="/" style={{ textDecoration: 'none', color: 'var(--color-primary)', fontWeight: 'bold' }}>
                     Stop Procrastinating
@@ -44,6 +49,23 @@ const Layout = ({ children }) => {
                         <span role="img" aria-label="points">✨</span>
                         <span>{stats.totalPoints} pts</span>
                     </div>
+
+                    <button
+                        onClick={toggleTheme}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: 'var(--color-primary)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '0.25rem'
+                        }}
+                        aria-label="Toggle Theme"
+                    >
+                        {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                    </button>
+
                     {user ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '0.5rem' }}>
                             {user.photoURL ? (
@@ -73,8 +95,9 @@ const Layout = ({ children }) => {
                 bottom: 0,
                 left: 0,
                 width: '100%',
-                background: 'white',
-                borderTop: '1px solid #e2e8f0',
+                width: '100%',
+                background: 'var(--nav-bg)',
+                borderTop: '1px solid var(--border-color)',
                 display: 'flex',
                 justifyContent: 'space-around',
                 padding: '0.75rem 0',
