@@ -296,11 +296,15 @@ const Schedule = () => {
                                     value={dailyFormData.time}
                                     onChange={e => {
                                         const val = e.target.value;
-                                        if (val === '' || /^\d+$/.test(val)) {
+                                        if (val === '') {
                                             setDailyFormData({ ...dailyFormData, time: val });
+                                        } else if (/^\d+$/.test(val)) {
+                                            if (parseInt(val, 10) <= 600) {
+                                                setDailyFormData({ ...dailyFormData, time: val });
+                                            }
                                         }
                                     }}
-                                    placeholder="e.g. 30"
+                                    placeholder="e.g. 30 (max 600)"
                                 />
                             </div>
 
@@ -543,8 +547,12 @@ const Schedule = () => {
                                                     value={logTime}
                                                     onChange={e => {
                                                         const val = e.target.value;
-                                                        if (val === '' || /^\d+$/.test(val)) {
+                                                        if (val === '') {
                                                             setLogTime(val);
+                                                        } else if (/^\d+$/.test(val)) {
+                                                            if (parseInt(val, 10) <= 600) {
+                                                                setLogTime(val);
+                                                            }
                                                         }
                                                     }}
                                                     style={{ width: '80px', padding: '0.25rem' }}
