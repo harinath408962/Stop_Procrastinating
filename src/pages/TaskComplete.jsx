@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import { getStorage, setStorage, STORAGE_KEYS, addPoints, updateStreak } from '../utils/storage';
 import { logEvent } from '../utils/analytics';
 import { CheckCircle, Upload, Camera } from 'lucide-react';
+import TimeSelector from '../components/TimeSelector';
 import TimeOfDaySelector from '../components/TimeOfDaySelector';
 
 const TaskComplete = () => {
@@ -163,15 +164,7 @@ const TaskComplete = () => {
                     <form onSubmit={handleSubmit}>
                         <div style={{ marginBottom: '1.5rem' }}>
                             <label>Time Taken (minutes)</label>
-                            <input
-                                type="number"
-                                required
-                                min="1"
-                                value={timeTaken}
-                                onChange={e => setTimeTaken(e.target.value)}
-                                placeholder="e.g. 30"
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #cbd5e1', marginTop: '0.5rem' }}
-                            />
+                            <TimeSelector value={timeTaken} onChange={setTimeTaken} />
                         </div>
 
                         <TimeOfDaySelector value={timeOfDay} onChange={setTimeOfDay} />

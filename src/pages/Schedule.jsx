@@ -289,10 +289,17 @@ const Schedule = () => {
                             <div style={{ marginBottom: '1rem' }}>
                                 <label>Expected Time (Minutes)</label>
                                 <input
-                                    type="number"
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     required
                                     value={dailyFormData.time}
-                                    onChange={e => setDailyFormData({ ...dailyFormData, time: e.target.value })}
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        if (val === '' || /^\d+$/.test(val)) {
+                                            setDailyFormData({ ...dailyFormData, time: val });
+                                        }
+                                    }}
                                     placeholder="e.g. 30"
                                 />
                             </div>
@@ -529,10 +536,17 @@ const Schedule = () => {
                                             <h4 style={{ margin: '0 0 0.5rem' }}>Log Work (Not Done Yet)</h4>
                                             <form onSubmit={handleLogWork} style={{ display: 'flex', gap: '0.5rem' }}>
                                                 <input
-                                                    type="number"
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
                                                     placeholder="Mins"
                                                     value={logTime}
-                                                    onChange={e => setLogTime(e.target.value)}
+                                                    onChange={e => {
+                                                        const val = e.target.value;
+                                                        if (val === '' || /^\d+$/.test(val)) {
+                                                            setLogTime(val);
+                                                        }
+                                                    }}
                                                     style={{ width: '80px', padding: '0.25rem' }}
                                                     autoFocus
                                                 />

@@ -25,10 +25,17 @@ const TimeSelector = ({ value, onChange }) => {
                 </button>
             ))}
             <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 placeholder="Custom"
                 value={value}
-                onChange={(e) => onChange(e.target.value)}
+                onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || /^\d+$/.test(val)) {
+                        onChange(val);
+                    }
+                }}
                 style={{
                     width: '100px',
                     padding: '0.5rem',
