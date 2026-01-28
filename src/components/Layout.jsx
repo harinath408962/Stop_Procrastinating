@@ -32,8 +32,6 @@ const Layout = ({ children }) => {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                alignItems: 'center',
                 background: 'var(--header-bg)',
                 color: 'var(--color-text-primary)'
             }}>
@@ -94,7 +92,6 @@ const Layout = ({ children }) => {
                 position: 'fixed',
                 bottom: 0,
                 left: 0,
-                width: '100%',
                 width: '100%',
                 background: 'var(--nav-bg)',
                 borderTop: '1px solid var(--border-color)',
