@@ -10,12 +10,15 @@ import DistractionLimiter from './pages/DistractionLimiter';
 import Analysis from './pages/Analysis';
 import SignIn from './pages/SignIn';
 
+import Settings from './pages/Settings'; // v2
+
 function App() {
     return (
         <HashRouter>
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/analysis" element={<Analysis />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="/signin" element={<SignIn />} />
                 <Route path="/mood" element={<MoodSelect />} />
                 <Route path="/tasks" element={<TaskList />} />

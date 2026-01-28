@@ -48,6 +48,10 @@ const Layout = ({ children }) => {
                         <span>{stats.totalPoints} pts</span>
                     </div>
 
+                    <Link to="/settings" style={{ color: 'var(--color-primary)', display: 'flex', alignItems: 'center' }}>
+                        <Settings size={20} />
+                    </Link>
+
                     <button
                         onClick={toggleTheme}
                         style={{
