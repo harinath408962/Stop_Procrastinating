@@ -2,14 +2,16 @@ import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { getStorage, STORAGE_KEYS } from '../utils/storage';
 import { generateEventCsv, downloadCsv } from '../utils/exportUtils';
+import { generateSmartInsight } from '../utils/ml/recommender';
 import BarChart from '../components/BarChart';
 import LineChart from '../components/LineChart';
-import { Download, ArrowLeft } from 'lucide-react';
+import { Download, ArrowLeft, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Analysis = () => {
     const navigate = useNavigate();
     const [stats, setStats] = useState([]);
+    const [smartTip, setSmartTip] = useState(null);
 
     useEffect(() => {
         const history = getStorage(STORAGE_KEYS.REFLECTIONS, []);
@@ -87,6 +89,9 @@ const Analysis = () => {
         // Convert to array and sort
         const sorted = Object.values(dailyData).sort((a, b) => new Date(a.date) - new Date(b.date));
         setStats(sorted);
+        // 5. ML Insights
+        const tip = generateSmartInsight();
+        setSmartTip(tip);
     }, []);
 
     const downloadCSV = () => {
@@ -143,6 +148,23 @@ const Analysis = () => {
                 </div>
 
                 <div style={{ display: 'grid', gap: '2rem' }}>
+
+                    {/* ML Insight Card */}
+                    {smartTip && (
+                        <div className="card" style={{ background: smartTip.type === 'warning' ? '#fef2f2' : '#f0f9ff', border: smartTip.type === 'warning' ? '1px solid #fecaca' : '1px solid #bae6fd' }}>
+                            <h3 style={{ marginBottom: '0.5rem', color: smartTip.type === 'warning' ? '#b91c1c' : '#0369a1', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <Zap size={20} /> Smart Insight
+                            </h3>
+                            <p style={{ color: smartTip.type === 'warning' ? '#991b1b' : '#0284c7', fontSize: '1.1rem' }}>
+                                {smartTip.text.replace(/\*\*/g, '')}
+                            </p>
+                            {smartTip.type === 'neutral' && (
+                                <p style={{ fontSize: '0.85rem', marginTop: '0.5rem', color: 'var(--color-text-secondary)' }}>
+                                    (The more you use the app, the smarter these tips become!)
+                                </p>
+                            )}
+                        </div>
+                    )}
 
                     {/* Graph 1: Work vs Procrastination */}
                     <div className="card">

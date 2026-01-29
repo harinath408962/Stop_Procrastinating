@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { getStorage, STORAGE_KEYS } from '../utils/storage';
-import { Trophy, ArrowRight, Activity, Calendar } from 'lucide-react';
+import { generateSmartInsight } from '../utils/ml/recommender';
+import { Trophy, ArrowRight, Activity, Calendar, Zap } from 'lucide-react';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -10,6 +11,7 @@ const Home = () => {
     const [streak, setStreak] = useState(0);
     const [points, setPoints] = useState(0);
     const [dailyStatement, setDailyStatement] = useState('Start your day!');
+    const [smartTip, setSmartTip] = useState(null); // ML Tip
     const [topDistractions, setTopDistractions] = useState([]);
     const [lastReflection, setLastReflection] = useState(null);
 
@@ -112,6 +114,11 @@ const Home = () => {
             });
         };
 
+
+        // 5. ML Insights
+        const tip = generateSmartInsight();
+        setSmartTip(tip);
+
         calculateLiveStats();
     }, []);
 
@@ -134,6 +141,26 @@ const Home = () => {
                     <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'var(--color-bg-accent)', borderRadius: 'var(--radius-md)', fontWeight: '500', color: 'var(--color-primary)' }}>
                         {dailyStatement}
                     </div>
+
+                    {smartTip && smartTip.type !== 'neutral' && (
+                        <div style={{
+                            marginBottom: '1rem',
+                            padding: '0.75rem',
+                            background: smartTip.type === 'warning' ? '#fef2f2' : '#f0f9ff',
+                            borderRadius: 'var(--radius-md)',
+                            border: smartTip.type === 'warning' ? '1px solid #fecaca' : '1px solid #bae6fd',
+                            fontSize: '0.9rem',
+                            display: 'flex',
+                            gap: '0.5rem',
+                            alignItems: 'start'
+                        }}>
+                            <Zap size={16} style={{ marginTop: '2px', color: smartTip.type === 'warning' ? '#ef4444' : '#0284c7' }} />
+                            <span style={{ color: smartTip.type === 'warning' ? '#b91c1c' : '#0369a1' }}>
+                                {/* Render markdown-like bolding simply by cleaning stars for now or using dangerouslySetInnerHTML? simpler: just remove stars for clean text */}
+                                {smartTip.text.replace(/\*\*/g, '')}
+                            </span>
+                        </div>
+                    )}
 
                     <ul style={{ paddingLeft: '1.5rem', color: 'var(--color-text-secondary)', lineHeight: '1.6', marginBottom: '1rem' }}>
                         <li><strong>{streak}</strong> Total Days Active</li>
