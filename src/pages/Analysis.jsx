@@ -13,22 +13,76 @@ const Analysis = () => {
 
     useEffect(() => {
         const history = getStorage(STORAGE_KEYS.REFLECTIONS, []);
-
-        // 1. Aggregate Data by Date (Take latest entry per day)
         const dailyData = {};
-        history.forEach(entry => {
-            const dateStr = new Date(entry.date).toDateString(); // "Fri Jan 23 2026"
-            // If entry exists, overwrite it (assuming later entry is more up to date "End of Day")
-            // Or should we sum them? User context implies "End of Day Reflection" is a summary.
-            // But previous task said "daily only one input", so overwrite is correct logic for "reset everyday".
 
-            // However, wait. If the user reflects multiple times, "Today's Reflection" usually grabs live data.
-            // The saved reflection is a snapshot.
-            // Taking the latest snapshot for the day is the best approach.
+        // 1. Process History
+        history.forEach(entry => {
+            const dateStr = new Date(entry.date).toDateString();
             if (!dailyData[dateStr] || new Date(entry.date) > new Date(dailyData[dateStr].date)) {
                 dailyData[dateStr] = entry;
             }
         });
+
+        // 2. Calculate Live Stats for Today
+        const calculateLiveToday = () => {
+            const todayDateStr = new Date().toDateString();
+
+            // Fetch Logs
+            const tasks = getStorage(STORAGE_KEYS.TASKS, []);
+            const scheduled = getStorage(STORAGE_KEYS.SCHEDULED_TASKS, []);
+            const workLogs = getStorage(STORAGE_KEYS.WORK_LOGS, []);
+            const distLogs = getStorage(STORAGE_KEYS.DISTRACTION_LOGS, []);
+
+            // Filter for Today
+            const todaysTasks = [...tasks, ...scheduled].filter(t =>
+                t.completed && t.completedAt && new Date(t.completedAt).toDateString() === todayDateStr
+            );
+            const todaysWorkLogs = workLogs.filter(l => new Date(l.date).toDateString() === todayDateStr);
+            const todaysDistractions = distLogs.filter(l => new Date(l.date).toDateString() === todayDateStr);
+
+            // Calculate Metrics
+            const taskTime = todaysTasks.reduce((acc, t) => acc + (parseInt(t.timeTaken) || 0), 0);
+            const partialTime = todaysWorkLogs.reduce((acc, l) => acc + (parseInt(l.duration) || 0), 0);
+            const totalWorkTime = taskTime + partialTime;
+
+            const distTime = todaysDistractions.reduce((acc, d) => acc + (parseInt(d.duration) || 0), 0);
+
+            // Points
+            const taskPoints = todaysTasks.reduce((acc, t) => {
+                if (t.pointsEarned !== undefined) return acc + t.pointsEarned;
+                return acc + 10 + (parseInt(t.timeTaken) || 0);
+            }, 0);
+            const workLogPoints = todaysWorkLogs.reduce((acc, l) => acc + (parseInt(l.duration) || 0), 0);
+            const totalPoints = taskPoints + workLogPoints;
+
+            // Scores
+            let workScore = 0;
+            let procrastinationScore = 0;
+            const totalActive = totalWorkTime + distTime;
+            if (totalActive > 0) {
+                procrastinationScore = Math.round((distTime / totalActive) * 100);
+                workScore = 100 - procrastinationScore;
+            }
+
+            return {
+                date: new Date().toISOString(),
+                workScore,
+                procrastinationScore,
+                taskTime: totalWorkTime,
+                distractionTime: distTime,
+                pointsScored: totalPoints,
+                isLive: true
+            };
+        };
+
+        const liveToday = calculateLiveToday();
+
+        // 3. Merge Live Today
+        // Always show today if we have active data OR if we just want the chart to be current
+        if (liveToday.taskTime > 0 || liveToday.distractionTime > 0 || liveToday.pointsScored > 0) {
+            const todayStr = new Date().toDateString();
+            dailyData[todayStr] = liveToday;
+        }
 
         // Convert to array and sort
         const sorted = Object.values(dailyData).sort((a, b) => new Date(a.date) - new Date(b.date));
