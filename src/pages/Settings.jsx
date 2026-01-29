@@ -45,17 +45,11 @@ const Settings = () => {
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem' }}>
                     <button
                         onClick={() => navigate(-1)}
+                        className="btn-secondary"
                         style={{
-                            background: 'var(--color-bg-secondary)',
-                            border: 'none',
-                            cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.5rem',
-                            color: 'var(--color-primary)',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '2rem',
-                            fontWeight: '500',
                             marginRight: '1rem'
                         }}
                     >
@@ -120,7 +114,9 @@ const Settings = () => {
                                         cursor: 'pointer',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '0.5rem'
+                                        gap: '0.5rem',
+                                        fontSize: '0.9rem',
+                                        fontWeight: '500'
                                     }}
                                 >
                                     <Trash2 size={16} /> Clear All Data
