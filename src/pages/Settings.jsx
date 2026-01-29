@@ -180,7 +180,7 @@ const Settings = () => {
                         style={{ textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginTop: '1rem', cursor: 'default' }}
                         onClick={() => setClickCount(c => c + 1)}
                     >
-                        <p>Stop Procrastinating v1.0.1</p>
+                        <p>Stop Procrastinating v1.0.2</p>
                         <p>Build healthy habits, one day at a time.</p>
                         {clickCount > 5 && <p>🦄 You found a unicorn!</p>}
                     </div>

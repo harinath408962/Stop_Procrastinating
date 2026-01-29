@@ -71,7 +71,7 @@ const Home = () => {
                 // Fallback for old tasks or if saving failed: 10 base + timeTaken
                 const effectiveTime = parseInt(t.timeTaken) || 0;
                 return acc + 10 + effectiveTime;
-            }, 0) + (todaysWorkLogs.length * 2);
+            }, 0);
 
             // 4. Scores & Statement
             let workScore = 0;
