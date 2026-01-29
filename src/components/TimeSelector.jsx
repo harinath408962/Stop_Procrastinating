@@ -24,29 +24,30 @@ const TimeSelector = ({ value, onChange }) => {
                     {m}m
                 </button>
             ))}
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            placeholder="Custom (max 600)"
-            value={value}
-            onChange={(e) => {
-                const val = e.target.value;
-                if (val === '') {
-                    onChange(val);
-                } else if (/^\d+$/.test(val)) {
-                    const num = parseInt(val, 10);
-                    if (num <= 600) {
+            <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="Custom (max 600)"
+                value={value}
+                onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '') {
                         onChange(val);
+                    } else if (/^\d+$/.test(val)) {
+                        const num = parseInt(val, 10);
+                        if (num <= 600) {
+                            onChange(val);
+                        }
                     }
-                }
-            }}
-            style={{
-                width: '120px',
-                padding: '0.5rem',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid #cbd5e1',
-                outlineColor: 'var(--color-primary)'
-            }}
+                }}
+                style={{
+                    width: '120px',
+                    padding: '0.5rem',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid #cbd5e1',
+                    outlineColor: 'var(--color-primary)'
+                }}
             />
         </div>
     );
