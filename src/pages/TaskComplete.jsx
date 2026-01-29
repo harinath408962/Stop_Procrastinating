@@ -109,13 +109,19 @@ const TaskComplete = () => {
             // Rule 4: Future task completed on time
             const due = new Date(task.dueDate).setHours(0, 0, 0, 0);
             if (today <= due) {
+                // Bonus for scheduled tasks remains (was 100)
+                // If user wants +10 PER submission, is 100 replacing it?
+                // Assuming 100 is base for scheduled ON TIME, 10 is base for LATE/NORMAL.
                 points = 100;
             } else {
-                // Late completion, maybe just standard points?
-                // User didn't specify, sticking to standard 10 (+ maybe 5 bonus from before? No, let's keep it simple as requested)
                 points = 10;
             }
         }
+
+        // Rule 2: per min of work +1
+        const duration = parseInt(timeTaken) || 0;
+        points += duration;
+
         addPoints(points);
         updateStreak();
 

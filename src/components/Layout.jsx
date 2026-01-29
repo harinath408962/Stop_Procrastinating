@@ -69,16 +69,34 @@ const Layout = ({ children }) => {
                     </button>
 
                     {user ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '0.5rem' }}>
+                        <Link
+                            to="/settings"
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                marginLeft: '0.5rem',
+                                textDecoration: 'none',
+                                color: 'inherit'
+                            }}
+                        >
                             {user.photoURL ? (
-                                <img src={user.photoURL} alt="User" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
+                                <img src={user.photoURL} alt="User" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
                             ) : (
-                                <User size={20} />
+                                <div style={{
+                                    width: '24px',
+                                    height: '24px',
+                                    borderRadius: '50%',
+                                    background: 'rgba(99, 102, 241, 0.1)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: 'var(--color-primary)'
+                                }}>
+                                    <User size={16} />
+                                </div>
                             )}
-                            <button onClick={handleSignOut} style={{ background: 'none', border: 'none', fontSize: '0.75rem', color: 'var(--color-primary)', cursor: 'pointer', textDecoration: 'underline' }}>
-                                Sign Out
-                            </button>
-                        </div>
+                        </Link>
                     ) : (
                         <Link to="/signin" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', textDecoration: 'none', color: 'var(--color-primary)', marginLeft: '0.5rem' }}>
                             <LogIn size={18} />

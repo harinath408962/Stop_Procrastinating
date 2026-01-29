@@ -150,7 +150,8 @@ const Schedule = () => {
         setDailyTasks([newTask, ...tasks]);
 
         // 2. Gamification
-        const points = 10;
+        const duration = parseInt(adhocTime) || 0;
+        const points = 10 + duration;
         addPoints(points);
         updateStreak();
 
