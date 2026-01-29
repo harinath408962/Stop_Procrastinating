@@ -18,6 +18,10 @@ const syncToCloud = async (key, value) => {
 
     try {
         const userRef = doc(db, "users", user.uid);
+
+        // Dispatch Start Event
+        window.dispatchEvent(new CustomEvent('sp-sync-start'));
+
         // We sync by updating the specific field in the user document
         // Mapping keys to cloud fields:
         const fieldMap = {
@@ -25,7 +29,9 @@ const syncToCloud = async (key, value) => {
             [STORAGE_KEYS.SCHEDULED_TASKS]: 'scheduled',
             [STORAGE_KEYS.REFLECTIONS]: 'reflections',
             [STORAGE_KEYS.USER_STATS]: 'stats',
-            [STORAGE_KEYS.USER_MOOD]: 'mood'
+            [STORAGE_KEYS.USER_MOOD]: 'mood',
+            [STORAGE_KEYS.DISTRACTION_LOGS]: 'distractions', // Added missing key for completeness
+            [STORAGE_KEYS.WORK_LOGS]: 'work_logs' // Added missing key
         };
 
         const cloudField = fieldMap[key];
@@ -35,9 +41,14 @@ const syncToCloud = async (key, value) => {
             const dataToSave = typeof value === 'object' ? JSON.stringify(value) : value;
             await setDoc(userRef, { [cloudField]: dataToSave }, { merge: true });
             console.log(`Synced ${key} to cloud.`);
+
+            // Dispatch Success Event
+            window.dispatchEvent(new CustomEvent('sp-sync-success'));
         }
     } catch (err) {
         console.error("Cloud sync failed:", err);
+        // Dispatch Error Event
+        window.dispatchEvent(new CustomEvent('sp-sync-error', { detail: err }));
     }
 };
 

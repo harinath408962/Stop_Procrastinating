@@ -7,6 +7,7 @@ import { auth } from '../utils/firebase';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { Moon, Sun, Download, Trash2, LogOut, User, Info, ArrowLeft } from 'lucide-react';
+import SyncStatus from '../components/SyncStatus';
 
 const Settings = () => {
     const navigate = useNavigate();
@@ -61,6 +62,9 @@ const Settings = () => {
                         <ArrowLeft size={18} /> Back
                     </button>
                     <h2 style={{ margin: 0 }}>Settings</h2>
+                    <div style={{ marginLeft: 'auto' }}>
+                        <SyncStatus />
+                    </div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
