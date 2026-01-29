@@ -36,7 +36,7 @@ const SyncStatus = () => {
         };
     }, []);
 
-    if (status === 'idle') return null;
+    // if (status === 'idle') return null;
 
     return (
         <div style={{
@@ -87,7 +87,7 @@ const getStatusText = (status) => {
         case 'syncing': return 'Syncing...';
         case 'success': return 'Saved';
         case 'error': return 'Sync Failed';
-        default: return '';
+        default: return 'Sync Ready';
     }
 };
 
