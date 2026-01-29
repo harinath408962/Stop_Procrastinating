@@ -27,7 +27,7 @@ const Home = () => {
 
             // 1. Logs & Distractions
             const distLogs = getStorage(STORAGE_KEYS.DISTRACTION_LOGS, []);
-            const todaysDistractions = distLogs.filter(l => new Date(l.date).setHours(0, 0, 0, 0) === today);
+            const todaysDistractions = distLogs.filter(l => new Date(l.date).toDateString() === new Date().toDateString());
             const distTime = todaysDistractions.reduce((acc, curr) => acc + parseInt(curr.duration || 0), 0);
             const distCount = todaysDistractions.length;
 
@@ -46,15 +46,15 @@ const Home = () => {
             const tasks = getStorage(STORAGE_KEYS.TASKS, []);
             const scheduled = getStorage(STORAGE_KEYS.SCHEDULED_TASKS, []);
 
-            const completedTasks = tasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt).setHours(0, 0, 0, 0) === today);
-            const completedSched = scheduled.filter(t => t.completed && t.completedAt && new Date(t.completedAt).setHours(0, 0, 0, 0) === today);
+            const completedTasks = tasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt).toDateString() === new Date().toDateString());
+            const completedSched = scheduled.filter(t => t.completed && t.completedAt && new Date(t.completedAt).toDateString() === new Date().toDateString());
             const allCompleted = [...completedTasks, ...completedSched];
 
             const completedTime = allCompleted.reduce((acc, curr) => acc + (parseInt(curr.timeTaken) || 0), 0);
 
             // 3. Partial Work Logs
             const workLogs = getStorage(STORAGE_KEYS.WORK_LOGS, []);
-            const todaysWorkLogs = workLogs.filter(l => new Date(l.date).setHours(0, 0, 0, 0) === today);
+            const todaysWorkLogs = workLogs.filter(l => new Date(l.date).toDateString() === new Date().toDateString());
             const partialTime = todaysWorkLogs.reduce((acc, curr) => acc + parseInt(curr.duration || 0), 0);
 
             const totalWorkTime = completedTime + partialTime;
