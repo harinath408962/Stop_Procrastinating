@@ -133,6 +133,10 @@ const Schedule = () => {
     const handleAdhocSubmit = (e) => {
         e.preventDefault();
 
+        // 2. Gamification calculation
+        const duration = parseInt(adhocTime) || 0;
+        const points = 10 + duration;
+
         // 1. Create Task & Mark Complete
         const tasks = getStorage(STORAGE_KEYS.TASKS, []);
         const newTask = {
@@ -144,14 +148,12 @@ const Schedule = () => {
             completedAt: new Date().toISOString(),
             timeTaken: parseInt(adhocTime) || 0,
             proofImage,
-            isAdhoc: true
+            isAdhoc: true,
+            pointsEarned: points // Save points
         };
         setStorage(STORAGE_KEYS.TASKS, [newTask, ...tasks]);
         setDailyTasks([newTask, ...tasks]);
 
-        // 2. Gamification
-        const duration = parseInt(adhocTime) || 0;
-        const points = 10 + duration;
         addPoints(points);
         updateStreak();
 

@@ -65,6 +65,25 @@ const TaskComplete = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        // 1. Calculate Points First
+        const today = new Date().setHours(0, 0, 0, 0);
+        let points = 10; // Rule 1: Normal task = 10 points
+
+        if (task.isSchedule) {
+            // Rule 4: Future task completed on time
+            const due = new Date(task.dueDate).setHours(0, 0, 0, 0);
+            if (today <= due) {
+                points = 100;
+            } else {
+                points = 10;
+            }
+        }
+
+        // Rule 2: per min of work +1
+        const duration = parseInt(timeTaken) || 0;
+        points += duration;
+
+        // 2. Update Storage with Points Saved
         if (task.isSchedule) {
             // Update Scheduled Task
             const scheduled = getStorage(STORAGE_KEYS.SCHEDULED_TASKS, []);
@@ -75,7 +94,8 @@ const TaskComplete = () => {
                         completed: true,
                         completedAt: new Date().toISOString(),
                         timeTaken: parseInt(timeTaken) || 0,
-                        proofImage
+                        proofImage,
+                        pointsEarned: points // Save points
                     };
                 }
                 return t;
@@ -89,11 +109,11 @@ const TaskComplete = () => {
                     return {
                         ...t,
                         completed: true,
-                        // reflection removed
                         learning,
                         completedAt: new Date().toISOString(),
                         timeTaken: parseInt(timeTaken) || 0,
-                        proofImage
+                        proofImage,
+                        pointsEarned: points // Save points
                     };
                 }
                 return t;
@@ -101,27 +121,7 @@ const TaskComplete = () => {
             setStorage(STORAGE_KEYS.TASKS, updatedTasks);
         }
 
-        // Gamification
-        const today = new Date().setHours(0, 0, 0, 0);
-        let points = 10; // Rule 1: Normal task = 10 points
-
-        if (task.isSchedule) {
-            // Rule 4: Future task completed on time
-            const due = new Date(task.dueDate).setHours(0, 0, 0, 0);
-            if (today <= due) {
-                // Bonus for scheduled tasks remains (was 100)
-                // If user wants +10 PER submission, is 100 replacing it?
-                // Assuming 100 is base for scheduled ON TIME, 10 is base for LATE/NORMAL.
-                points = 100;
-            } else {
-                points = 10;
-            }
-        }
-
-        // Rule 2: per min of work +1
-        const duration = parseInt(timeTaken) || 0;
-        points += duration;
-
+        // 3. Update User Stats & Analytics
         addPoints(points);
         updateStreak();
 

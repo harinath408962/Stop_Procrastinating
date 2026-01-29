@@ -59,7 +59,19 @@ const Home = () => {
 
             const totalWorkTime = completedTime + partialTime;
             const tasksDoneCount = allCompleted.length;
-            const pointsScored = (tasksDoneCount * 10) + (todaysWorkLogs.length * 2);
+
+            // Fix: Sum actual points earned stored on tasks. Fallback to old formula if missing.
+            // Old formula: 10 pts per task. 
+            // New formula: 10 pts + duration (so 60 min task = 70 pts).
+            // We adding partial logs as tasks now? No, Work Logs are ignored in new system mostly?
+            // Actually, let's keep workLogs logic for legacy, but prioritized pointsEarned.
+
+            const pointsScored = allCompleted.reduce((acc, t) => {
+                if (t.pointsEarned !== undefined) return acc + t.pointsEarned;
+                // Fallback for old tasks or if saving failed: 10 base + timeTaken
+                const effectiveTime = parseInt(t.timeTaken) || 0;
+                return acc + 10 + effectiveTime;
+            }, 0) + (todaysWorkLogs.length * 2);
 
             // 4. Scores & Statement
             let workScore = 0;
