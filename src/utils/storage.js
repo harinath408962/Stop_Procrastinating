@@ -12,7 +12,7 @@ export const STORAGE_KEYS = {
     EVENT_LOG: 'sp_event_log'
 };
 
-const syncToCloud = async (key, value) => {
+const syncToCloud = async (key, value, silent = false) => {
     const user = auth.currentUser;
     if (!user) return; // Not logged in, local only
 
@@ -20,7 +20,7 @@ const syncToCloud = async (key, value) => {
         const userRef = doc(db, "users", user.uid);
 
         // Dispatch Start Event
-        window.dispatchEvent(new CustomEvent('sp-sync-start'));
+        if (!silent) window.dispatchEvent(new CustomEvent('sp-sync-start'));
 
         // We sync by updating the specific field in the user document
         // Mapping keys to cloud fields:
@@ -30,25 +30,24 @@ const syncToCloud = async (key, value) => {
             [STORAGE_KEYS.REFLECTIONS]: 'reflections',
             [STORAGE_KEYS.USER_STATS]: 'stats',
             [STORAGE_KEYS.USER_MOOD]: 'mood',
-            [STORAGE_KEYS.DISTRACTION_LOGS]: 'distractions', // Added missing key for completeness
-            [STORAGE_KEYS.WORK_LOGS]: 'work_logs' // Added missing key
+            [STORAGE_KEYS.DISTRACTION_LOGS]: 'distractions',
+            [STORAGE_KEYS.WORK_LOGS]: 'work_logs'
         };
 
         const cloudField = fieldMap[key];
         if (cloudField) {
             // Store complex objects as JSON strings to avoid Firestore mapping issues/costs with deep indexing if not needed
-            // Or store as objects? detailed SignIn.jsx used JSON.stringify. Let's stick to that for consistency v1.
             const dataToSave = typeof value === 'object' ? JSON.stringify(value) : value;
             await setDoc(userRef, { [cloudField]: dataToSave }, { merge: true });
             console.log(`Synced ${key} to cloud.`);
 
             // Dispatch Success Event
-            window.dispatchEvent(new CustomEvent('sp-sync-success'));
+            if (!silent) window.dispatchEvent(new CustomEvent('sp-sync-success'));
         }
     } catch (err) {
         console.error("Cloud sync failed:", err);
         // Dispatch Error Event
-        window.dispatchEvent(new CustomEvent('sp-sync-error', { detail: err }));
+        if (!silent) window.dispatchEvent(new CustomEvent('sp-sync-error', { detail: err }));
     }
 };
 
@@ -127,4 +126,33 @@ export const clearAllStorage = () => {
     });
     // Also clear user name if stored separately
     localStorage.removeItem('sp_user_name');
+};
+
+export const forceSyncAll = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    window.dispatchEvent(new CustomEvent('sp-sync-start'));
+
+    try {
+        const promises = Object.values(STORAGE_KEYS).map(async key => {
+            const val = getStorage(key);
+            if (val !== null) {
+                // Reuse the internal logic if possible, but since it's not exported and scope issues...
+                // actually we can just call setStorage(key, val) but that might trigger individual events.
+                // Better to duplicate the raw syncToCloud call logic or make syncToCloud accept a 'silent' flag?
+                // Or just loop and call syncToCloud logic directly since we are in the same module.
+                // Wait, syncToCloud IS defined in this scope.
+                await syncToCloud(key, val, true);
+            }
+        });
+
+        await Promise.all(promises);
+        window.dispatchEvent(new CustomEvent('sp-sync-success'));
+        return true;
+    } catch (error) {
+        console.error("Force sync failed:", error);
+        window.dispatchEvent(new CustomEvent('sp-sync-error', { detail: error }));
+        return false;
+    }
 };

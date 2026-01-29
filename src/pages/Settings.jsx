@@ -2,11 +2,11 @@ import { useState } from 'react';
 import Layout from '../components/Layout';
 import { useTheme } from '../context/ThemeContext';
 import { downloadCsv, generateEventCsv } from '../utils/exportUtils';
-import { getStorage, clearAllStorage, STORAGE_KEYS } from '../utils/storage';
+import { getStorage, clearAllStorage, forceSyncAll, STORAGE_KEYS } from '../utils/storage';
 import { auth } from '../utils/firebase';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sun, Download, Trash2, LogOut, User, Info, ArrowLeft } from 'lucide-react';
+import { Moon, Sun, Download, Trash2, LogOut, User, Info, ArrowLeft, RefreshCw } from 'lucide-react';
 import SyncStatus from '../components/SyncStatus';
 
 const Settings = () => {
@@ -37,6 +37,10 @@ const Settings = () => {
             navigate('/');
             window.location.reload();
         });
+    };
+
+    const handleSync = async () => {
+        await forceSyncAll();
     };
 
     return (
@@ -86,6 +90,13 @@ const Settings = () => {
                             <Download size={20} /> Data Management
                         </h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <button
+                                onClick={handleSync}
+                                className="btn-secondary"
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%' }}
+                            >
+                                <RefreshCw size={18} /> Sync Now
+                            </button>
                             <button
                                 onClick={handleExport}
                                 className="btn-secondary"
