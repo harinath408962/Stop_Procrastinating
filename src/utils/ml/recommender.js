@@ -31,7 +31,7 @@ export const generateSmartInsight = () => {
         }
     });
 
-    if (maxScore > 50) { // Threshold to ensure enough data
+    if (maxScore > 50) {
         const timeLabels = {
             morning: 'Morning (5AM - 12PM)',
             afternoon: 'Afternoon (12PM - 5PM)',
@@ -39,17 +39,15 @@ export const generateSmartInsight = () => {
             night: 'Night (9PM - 5AM)'
         };
         insights.push({
-            type: 'productivity',
-            text: `You are naturally most productive in the **${bestTime}**. Schedule your hardest tasks then! 🚀`,
-            score: maxScore
+            type: 'success',
+            title: '✨ Peak Performance',
+            text: `You are naturally most productive in the **${bestTime}**. Schedule your hardest tasks then!`,
         });
     }
 
     // --- Insight 2: Distraction Warning ---
     if (sortedTriggers.length > 0) {
         const topApp = sortedTriggers[0];
-
-        // Find most dangerous time for distractions
         let worstTime = 'night';
         let maxDist = -1;
         Object.entries(timePatterns).forEach(([time, count]) => {
@@ -62,21 +60,23 @@ export const generateSmartInsight = () => {
         if (maxDist > 2) {
             insights.push({
                 type: 'warning',
-                text: `Watch out for **${topApp.app}** in the ${worstTime}. It's your top distraction. 🛡️`,
-                score: maxDist * 10
+                title: '⚠️ Distraction Alert',
+                text: `Watch out for **${topApp.app}** in the ${worstTime}. It's your top distraction.`,
             });
         }
     }
 
-    // --- Insight 3: Cold Start / Encouragement ---
-    if (insights.length === 0) {
-        return {
-            type: 'neutral',
-            text: "Keep logging work to unlock Smart Insights! 🧠"
-        };
+    // --- Insight 3: Recent Trend (Last 3 Days) ---
+    // Simple check on points momentum
+    // (This would require daily history, simplifying for V1 to use current session streak or similar if available)
+    // For now, let's use a generic encouragement if empty
+    if (insights.length < 2) {
+        insights.push({
+            type: 'info',
+            title: '💡 Tip',
+            text: "Log more work and distractions to unlock deeper insights into your habits."
+        });
     }
 
-    // Return the highest scoring insight (most relevant)
-    // Or rotate them? Let's return the top one for now.
-    return insights[0];
+    return insights;
 };

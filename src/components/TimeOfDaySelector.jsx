@@ -1,6 +1,6 @@
 import { Sun, Sunset, Moon, CloudSun } from 'lucide-react';
 
-const TimeOfDaySelector = ({ value, onChange }) => {
+const TimeOfDaySelector = ({ value, onChange, compact = false }) => {
     const options = [
         { id: 'morning', label: 'Morning', icon: <Sun size={20} />, color: '#f59e0b' },
         { id: 'afternoon', label: 'Afternoon', icon: <CloudSun size={20} />, color: '#ea580c' },
@@ -13,23 +13,30 @@ const TimeOfDaySelector = ({ value, onChange }) => {
     // Parent should handle default state.
 
     return (
-        <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--color-text-secondary)' }}>
-                When did this happen?
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+        <div style={{ marginBottom: compact ? 0 : '1.5rem' }}>
+            {!compact && (
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--color-text-secondary)' }}>
+                    When did this happen?
+                </label>
+            )}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: compact ? 'repeat(4, auto)' : 'repeat(4, 1fr)',
+                gap: compact ? '0.25rem' : '0.5rem'
+            }}>
                 {options.map((opt) => (
                     <button
                         key={opt.id}
                         type="button"
                         onClick={() => onChange(opt.id)}
+                        title={compact ? opt.label : ''}
                         style={{
                             display: 'flex',
-                            flexDirection: 'column',
+                            flexDirection: compact ? 'row' : 'column',
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: '0.25rem',
-                            padding: '0.75rem 0.25rem',
+                            padding: compact ? '0.4rem' : '0.75rem 0.25rem',
                             borderRadius: 'var(--radius-md)',
                             border: `1px solid ${value === opt.id ? opt.color : 'transparent'}`,
                             background: value === opt.id ? `${opt.color}15` : 'var(--color-bg-secondary)',
@@ -39,7 +46,7 @@ const TimeOfDaySelector = ({ value, onChange }) => {
                         }}
                     >
                         {opt.icon}
-                        <span style={{ fontSize: '0.75rem', fontWeight: value === opt.id ? '600' : '400' }}>{opt.label}</span>
+                        {!compact && <span style={{ fontSize: '0.75rem', fontWeight: value === opt.id ? '600' : '400' }}>{opt.label}</span>}
                     </button>
                 ))}
             </div>

@@ -1,17 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Layout from '../components/Layout';
 import { getStorage, STORAGE_KEYS } from '../utils/storage';
 import { generateEventCsv, downloadCsv } from '../utils/exportUtils';
 import { generateSmartInsight } from '../utils/ml/recommender';
-import BarChart from '../components/BarChart';
-import LineChart from '../components/LineChart';
-import { Download, ArrowLeft, Zap } from 'lucide-react';
+import { Download, ArrowLeft, Zap, TrendingUp, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import {
+    LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+} from 'recharts';
 
 const Analysis = () => {
     const navigate = useNavigate();
     const [stats, setStats] = useState([]);
-    const [smartTip, setSmartTip] = useState(null);
+    const [insights, setInsights] = useState([]);
 
     useEffect(() => {
         const history = getStorage(STORAGE_KEYS.REFLECTIONS, []);
@@ -90,8 +91,8 @@ const Analysis = () => {
         const sorted = Object.values(dailyData).sort((a, b) => new Date(a.date) - new Date(b.date));
         setStats(sorted);
         // 5. ML Insights
-        const tip = generateSmartInsight();
-        setSmartTip(tip);
+        const generatedInsights = generateSmartInsight();
+        setInsights(generatedInsights);
     }, []);
 
     const downloadCSV = () => {
@@ -149,60 +150,103 @@ const Analysis = () => {
 
                 <div style={{ display: 'grid', gap: '2rem' }}>
 
-                    {/* ML Insight Card */}
-                    {smartTip && (
-                        <div className="card" style={{ background: smartTip.type === 'warning' ? '#fef2f2' : '#f0f9ff', border: smartTip.type === 'warning' ? '1px solid #fecaca' : '1px solid #bae6fd' }}>
-                            <h3 style={{ marginBottom: '0.5rem', color: smartTip.type === 'warning' ? '#b91c1c' : '#0369a1', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <Zap size={20} /> Smart Insight
-                            </h3>
-                            <p style={{ color: smartTip.type === 'warning' ? '#991b1b' : '#0284c7', fontSize: '1.1rem' }}>
-                                {smartTip.text.replace(/\*\*/g, '')}
-                            </p>
-                            {smartTip.type === 'neutral' && (
-                                <p style={{ fontSize: '0.85rem', marginTop: '0.5rem', color: 'var(--color-text-secondary)' }}>
-                                    (The more you use the app, the smarter these tips become!)
-                                </p>
-                            )}
+                    {/* ML Dashboard */}
+                    {insights.length > 0 && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+                            {insights.map((insight, idx) => (
+                                <div key={idx} className="card" style={{
+                                    background: insight.type === 'warning' ? '#fef2f2' : insight.type === 'success' ? '#f0fdf4' : '#f0f9ff',
+                                    border: insight.type === 'warning' ? '1px solid #fecaca' : insight.type === 'success' ? '1px solid #bbf7d0' : '1px solid #bae6fd'
+                                }}>
+                                    <h3 style={{
+                                        marginBottom: '0.5rem',
+                                        fontSize: '1rem',
+                                        color: insight.type === 'warning' ? '#b91c1c' : insight.type === 'success' ? '#15803d' : '#0369a1',
+                                        display: 'flex', alignItems: 'center', gap: '0.5rem'
+                                    }}>
+                                        {insight.type === 'warning' ? <AlertTriangle size={18} /> : insight.type === 'success' ? <TrendingUp size={18} /> : <Zap size={18} />}
+                                        {insight.title}
+                                    </h3>
+                                    <p style={{
+                                        color: insight.type === 'warning' ? '#991b1b' : insight.type === 'success' ? '#166534' : '#0284c7',
+                                        fontSize: '0.95rem', margin: 0
+                                    }}>
+                                        {insight.text.replace(/\*\*/g, '')}
+                                    </p>
+                                </div>
+                            ))}
                         </div>
                     )}
 
-                    {/* Graph 1: Work vs Procrastination */}
-                    <div className="card">
-                        <h3 style={{ marginBottom: '1rem', color: 'var(--color-text-primary)' }}>Work vs Procrastination (%)</h3>
+                    {/* Chart 1: Work vs Procrastination (Line) */}
+                    <div className="card" style={{ height: '400px', display: 'flex', flexDirection: 'column' }}>
+                        <h3 style={{ marginBottom: '1rem', color: 'var(--color-text-primary)' }}>Focus Consistency</h3>
                         <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
-                            Aim to keep the <span style={{ color: '#22c55e', fontWeight: 'bold' }}>Green</span> line above the <span style={{ color: '#ef4444', fontWeight: 'bold' }}>Red</span> line.
+                            Work Score vs Procrastination Score over time.
                         </p>
-                        <LineChart
-                            data={stats}
-                            dataKeys={['workScore', 'procrastinationScore']}
-                            colors={['#22c55e', '#ef4444']}
-                        />
+                        <div style={{ flex: 1, minHeight: 0 }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={stats} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <XAxis dataKey="date" tickFormatter={d => new Date(d).getDate() + '/' + (new Date(d).getMonth() + 1)} tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                                    <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                                    <Tooltip
+                                        labelFormatter={l => new Date(l).toDateString()}
+                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    />
+                                    <Legend />
+                                    <Line type="monotone" dataKey="workScore" name="Work Score" stroke="#22c55e" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                    <Line type="monotone" dataKey="procrastinationScore" name="Procrastination" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
 
-                    {/* Graph 2: Work Time vs Distracted Time (Grouped Bar) */}
-                    <div className="card">
-                        <h3 style={{ marginBottom: '1rem', color: 'var(--color-text-primary)' }}>Time: Work vs Distracted (Minutes)</h3>
-                        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
-                            Daily comparison of productive time vs lost time.
-                        </p>
-                        <BarChart
-                            data={stats}
-                            dataKeys={['taskTime', 'distractionTime']}
-                            colors={['#22c55e', '#f97316']}
-                        />
+                    {/* Chart 2: Time Breakdown (Stacked Bar) */}
+                    <div className="card" style={{ height: '400px', display: 'flex', flexDirection: 'column' }}>
+                        <h3 style={{ marginBottom: '1rem', color: 'var(--color-text-primary)' }}>Daily Time Breakdown (Mins)</h3>
+                        <div style={{ flex: 1, minHeight: 0 }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={stats} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <XAxis dataKey="date" tickFormatter={d => new Date(d).getDate() + '/' + (new Date(d).getMonth() + 1)} tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                                    <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                                    <Tooltip
+                                        labelFormatter={l => new Date(l).toDateString()}
+                                        cursor={{ fill: '#f1f5f9' }}
+                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    />
+                                    <Legend />
+                                    <Bar dataKey="taskTime" name="Productive Time" stackId="a" fill="#22c55e" radius={[0, 0, 4, 4]} />
+                                    <Bar dataKey="distractionTime" name="Distracted Time" stackId="a" fill="#f97316" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
 
-                    {/* Graph 3: Points Earned (Bar) */}
-                    <div className="card">
-                        <h3 style={{ marginBottom: '1rem', color: 'var(--color-text-primary)' }}>Focus Points Earned</h3>
-                        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
-                            Your daily rewards for completing tasks and building habits.
-                        </p>
-                        <BarChart
-                            data={stats}
-                            dataKeys={['pointsScored']}
-                            colors={['#a855f7']}
-                        />
+                    {/* Chart 3: Points Trend (Area) */}
+                    <div className="card" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
+                        <h3 style={{ marginBottom: '1rem', color: 'var(--color-text-primary)' }}>Growth (Points Earned)</h3>
+                        <div style={{ flex: 1, minHeight: 0 }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={stats} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
+                                    <defs>
+                                        <linearGradient id="colorPoints" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
+                                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <XAxis dataKey="date" tickFormatter={d => new Date(d).getDate() + '/' + (new Date(d).getMonth() + 1)} tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                                    <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                                    <Tooltip
+                                        labelFormatter={l => new Date(l).toDateString()}
+                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    />
+                                    <Area type="monotone" dataKey="pointsScored" name="Points" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorPoints)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
 
                 </div>

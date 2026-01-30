@@ -16,6 +16,7 @@ const Schedule = () => {
     // Partial Progress State
     const [loggingTask, setLoggingTask] = useState(null);
     const [logTime, setLogTime] = useState('');
+    const [logTimeOfDay, setLogTimeOfDay] = useState('morning');
 
     // UI Toggles
     const [showScheduleForm, setShowScheduleForm] = useState(false);
@@ -28,7 +29,8 @@ const Schedule = () => {
     const [proofImage, setProofImage] = useState(null);
     const fileInputRef = useRef(null);
     const cameraInputRef = useRef(null);
-    const [timeOfDay, setTimeOfDay] = useState('morning');
+
+    const [timeOfDay, setTimeOfDay] = useState('morning'); // For Ad-hoc
 
     // Schedule Form Data
     const [scheduleFormData, setScheduleFormData] = useState({
@@ -68,6 +70,8 @@ const Schedule = () => {
             taskId: loggingTask.id,
             taskTitle: loggingTask.title || loggingTask.name,
             duration: time,
+
+            timeOfDay: logTimeOfDay,
             date: new Date().toISOString()
         };
 
@@ -180,7 +184,6 @@ const Schedule = () => {
             points_earned: points,
             has_proof: !!proofImage,
             is_adhoc: true,
-            overrideTimeOfDay: timeOfDay
         });
 
         alert(`Saved! +${points} Points.`);
@@ -558,36 +561,47 @@ const Schedule = () => {
                                     {loggingTask?.id === task.id && (
                                         <div style={{ marginTop: '1rem', padding: '1rem', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)' }}>
                                             <h4 style={{ margin: '0 0 0.5rem' }}>Log Work (Not Done Yet)</h4>
-                                            <form onSubmit={handleLogWork} style={{ display: 'flex', gap: '0.5rem' }}>
-                                                <input
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    pattern="[0-9]*"
-                                                    placeholder="Mins"
-                                                    value={logTime}
-                                                    onChange={e => {
-                                                        const val = e.target.value;
-                                                        if (val === '') {
-                                                            setLogTime(val);
-                                                        } else if (/^\d+$/.test(val)) {
-                                                            if (parseInt(val, 10) <= 600) {
+                                            <form onSubmit={handleLogWork} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                    <input
+                                                        type="text"
+                                                        inputMode="numeric"
+                                                        pattern="[0-9]*"
+                                                        placeholder="Mins"
+                                                        value={logTime}
+                                                        onChange={e => {
+                                                            const val = e.target.value;
+                                                            if (val === '') {
                                                                 setLogTime(val);
+                                                            } else if (/^\d+$/.test(val)) {
+                                                                if (parseInt(val, 10) <= 600) {
+                                                                    setLogTime(val);
+                                                                }
                                                             }
-                                                        }
-                                                    }}
-                                                    style={{ width: '80px', padding: '0.25rem' }}
-                                                    autoFocus
-                                                />
-                                                <button type="submit" className="btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
-                                                    <Save size={14} /> Save
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setLoggingTask(null); setLogTime(''); }}
-                                                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)' }}
-                                                >
-                                                    <X size={18} />
-                                                </button>
+                                                        }}
+                                                        style={{ width: '80px', padding: '0.5rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                                                        autoFocus
+                                                    />
+                                                    <TimeOfDaySelector value={logTimeOfDay} onChange={setLogTimeOfDay} compact={true} />
+                                                </div>
+
+                                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                    <button
+                                                        type="submit"
+                                                        className="btn-primary"
+                                                        style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem', flex: 1, opacity: !logTime ? 0.5 : 1 }}
+                                                        disabled={!logTime}
+                                                    >
+                                                        <Save size={14} /> Save
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setLoggingTask(null); setLogTime(''); }}
+                                                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)' }}
+                                                    >
+                                                        <X size={18} />
+                                                    </button>
+                                                </div>
                                             </form>
                                         </div>
                                     )}

@@ -12,6 +12,7 @@ const Home = () => {
     const [points, setPoints] = useState(0);
     const [dailyStatement, setDailyStatement] = useState('Start your day!');
     const [smartTip, setSmartTip] = useState(null); // ML Tip
+    const [insights, setInsights] = useState([]);
     const [topDistractions, setTopDistractions] = useState([]);
     const [lastReflection, setLastReflection] = useState(null);
 
@@ -116,8 +117,11 @@ const Home = () => {
 
 
         // 5. ML Insights
-        const tip = generateSmartInsight();
-        setSmartTip(tip);
+        const tips = generateSmartInsight();
+        setInsights(tips);
+        if (tips && tips.length > 0) {
+            setSmartTip(tips[0]);
+        }
 
         calculateLiveStats();
     }, []);
@@ -146,18 +150,17 @@ const Home = () => {
                         <div style={{
                             marginBottom: '1rem',
                             padding: '0.75rem',
-                            background: smartTip.type === 'warning' ? '#fef2f2' : '#f0f9ff',
+                            background: smartTip.type === 'warning' ? '#fef2f2' : smartTip.type === 'success' ? '#f0fdf4' : '#f0f9ff',
                             borderRadius: 'var(--radius-md)',
-                            border: smartTip.type === 'warning' ? '1px solid #fecaca' : '1px solid #bae6fd',
+                            border: smartTip.type === 'warning' ? '1px solid #fecaca' : smartTip.type === 'success' ? '1px solid #bbf7d0' : '1px solid #bae6fd',
                             fontSize: '0.9rem',
                             display: 'flex',
                             gap: '0.5rem',
                             alignItems: 'start'
                         }}>
-                            <Zap size={16} style={{ marginTop: '2px', color: smartTip.type === 'warning' ? '#ef4444' : '#0284c7' }} />
-                            <span style={{ color: smartTip.type === 'warning' ? '#b91c1c' : '#0369a1' }}>
-                                {/* Render markdown-like bolding simply by cleaning stars for now or using dangerouslySetInnerHTML? simpler: just remove stars for clean text */}
-                                {smartTip.text.replace(/\*\*/g, '')}
+                            <Zap size={16} style={{ marginTop: '2px', color: smartTip.type === 'warning' ? '#ef4444' : smartTip.type === 'success' ? '#15803d' : '#0284c7' }} />
+                            <span style={{ color: smartTip.type === 'warning' ? '#b91c1c' : smartTip.type === 'success' ? '#166534' : '#0369a1' }}>
+                                <strong>{smartTip.title}:</strong> {smartTip.text.replace(/\*\*/g, '')}
                             </span>
                         </div>
                     )}
