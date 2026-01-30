@@ -150,8 +150,31 @@ const Home = () => {
     return (
         <Layout>
             <div className="container" style={{ textAlign: 'center', paddingTop: '2rem' }}>
+                {deferredPrompt && (
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <button
+                            onClick={handleInstallClick}
+                            style={{
+                                background: 'var(--color-primary)',
+                                color: 'white',
+                                border: 'none',
+                                padding: '0.6rem 1.25rem',
+                                borderRadius: '2rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                margin: '0 auto',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem',
+                                boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.3)'
+                            }}
+                        >
+                            <Download size={16} /> Install App
+                        </button>
+                    </div>
+                )}
                 <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    Stop Procrastinating
+                    Productivity
                 </h1>
                 <p style={{ fontSize: '1.2rem', color: 'var(--color-text-secondary)', marginBottom: '2rem' }}>
                     Start small. Be kind to yourself.
@@ -302,27 +325,7 @@ const Home = () => {
                     </div>
                 )}
                 {/* Install Button (Floating or inline) */}
-                {deferredPrompt && (
-                    <div style={{ marginTop: '2rem' }}>
-                        <button
-                            onClick={handleInstallClick}
-                            style={{
-                                background: 'var(--color-text-primary)',
-                                color: 'white',
-                                border: 'none',
-                                padding: '0.75rem 1.5rem',
-                                borderRadius: '2rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                margin: '0 auto',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <Download size={18} /> Install App
-                        </button>
-                    </div>
-                )}
+
             </div>
         </Layout >
     );

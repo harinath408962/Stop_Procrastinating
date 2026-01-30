@@ -12,20 +12,20 @@ export default defineConfig(({ command }) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
-          name: 'Stop Procrastinating',
-          short_name: 'StopProc',
+          name: 'Productivity',
+          short_name: 'Productivity',
           description: 'Gamified productivity app to help you focus.',
           theme_color: '#6366f1',
           icons: [
             {
-              src: 'pwa-192x192.svg',
+              src: 'pwa-192x192.png',
               sizes: '192x192',
-              type: 'image/svg+xml'
+              type: 'image/png'
             },
             {
-              src: 'pwa-512x512.svg',
+              src: 'pwa-512x512.png',
               sizes: '512x512',
-              type: 'image/svg+xml'
+              type: 'image/png'
             }
           ]
         }
