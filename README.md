@@ -37,4 +37,4 @@ This project was developed by:
 
 
 
-**This is a completed prototype for our project Design Thinking Lab (DTL)**
+## **This is a completed prototype for Design Thinking Lab project(DTL)**
