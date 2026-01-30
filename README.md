@@ -4,7 +4,6 @@
 
 An intelligent, empathy-driven productivity application designed to help students and professionals overcome inertia, build momentum, and track their focus habits. Unlike traditional to-do lists, this app focuses on *starting* small and understanding *why* you are distracted.
 
-![App Screenshot](https://via.placeholder.com/800x400?text=Stop+Procrastinating+App+Preview)
 
 ## 🚀 Key Features
 
