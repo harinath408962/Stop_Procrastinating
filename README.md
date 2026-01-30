@@ -1,60 +1,40 @@
 # Stop Procrastinating
 
-An intelligent, empathetic anti-procrastination assistant designed to help you overcome inertia, build momentum, and track your progress.
+> **Complete Prototype - v1.2**
 
-![Stop Procrastinating App Screenshot](https://via.placeholder.com/800x400?text=Stop+Procrastinating+App+Preview) 
+An intelligent, empathy-driven productivity application designed to help students and professionals overcome inertia, build momentum, and track their focus habits. Unlike traditional to-do lists, this app focuses on *starting* small and understanding *why* you are distracted.
+
+![App Screenshot](https://via.placeholder.com/800x400?text=Stop+Procrastinating+App+Preview)
 
 ## 🚀 Key Features
 
-*   **🎯 Start Small Philosophy**: overcoming the initial resistance by breaking tasks into "2-minute micro-steps".
-*   **🎭 Mood-Based Productivity**: Filter and select tasks based on your current state (Focused, Low Energy, or Bored).
-*   **☁️ Cloud Sync & Backup**: Seamlessly sync your data across devices using Google Sign-In (powered by Firebase).
-*   **🔥 Gamification**: Earn "Focus Points" and build daily streaks to stay motivated.
-*   **🛡️ Distraction Limiter**: Set firm intentions before visiting distracting sites.
-*   **📊 Insights & Analysis**: Visualize your work vs. procrastination habits over time.
-*   **📅 Planning Hub**: Manage daily commitments and schedule future tasks to reduce anxiety.
+*   **📱 Progressive Web App (PWA)**: Installable on mobile and desktop, works offline.
+*   **🎯 Micro-Step Philosophy**: Overcome resistance by breaking daunting tasks into "2-minute small steps".
+*   **🧠 ML-Powered Insights**: Get smart tips like *"You are most productive in the morning"* based on your actual usage patterns.
+*   **📊 Advanced Analytics**: Visual breakdowns of your "Worked vs. Distracted" time, daily trends, and productivity peaks using interactive charts.
+*   **🛡️ Distraction Limiter**: A friction-based system to log distractions consciously before giving in.
+*   **🔥 Gamification**: Earn "Focus Points", build daily streaks, and visualize your progress with a "Live Snapshot".
+*   **📅 Planning Hub**: Manage daily commitments and schedule future tasks to reduce cognitive load.
+*   **☁️ Cloud Sync (Optional)**: Supports Firebase for syncing data across devices.
+
+## 👥 Team Members
+
+This project was developed by:
+
+1.  **K V Harinath Reddy** (1RV24CI048)
+2.  **Jagadeesha V** (1RV24CI044)
+3.  **Avinash R** (1RV24CI026)
+4.  **Krishna** (1RV24CI053)
 
 ## 🛠️ Tech Stack
 
 *   **Frontend**: React.js, Vite
-*   **Styling**: Plain CSS with Modern Design Variables, `lucide-react` for icons
-*   **Backend / Auth**: Firebase Authentication, Cloud Firestore
-*   **Persistence**: LocalStorage (offline-first) + Cloud Sync
+*   **Visualization**: Recharts (for analytics and data viz)
+*   **Icons**: Lucide-React
+*   **PWA**: Vite PWA Plugin (Service Workers, Manifest)
+*   **Styling**: Modern CSS3 (Variables, Flexbox/Grid, Responsive)
+*   **Data Persistence**: LocalStorage (Offline-first) + Firebase (Cloud)
 
-## 📦 Installation
 
-1.  **Clone the repository**
-    ```bash
-    git clone https://github.com/harinath408962/Stop_Procrastinating.git
-    cd Stop_Procrastinating
-    ```
 
-2.  **Install Dependencies**
-    ```bash
-    npm install
-    ```
-
-3.  **Run Development Server**
-    ```bash
-    npm run dev
-    ```
-
-## 🔧 Configuration (Firebase)
-
-To enable Cloud Sync, this project requires a Firebase configuration.
-Create a file at `src/utils/firebase.js` with your keys:
-
-```javascript
-import { initializeApp } from "firebase/app";
-// ... content of config
-```
-
-> **Note**: The current repo comes with a pre-configured `firebase.js`.
-
-## 🤝 Contributing
-
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
+**This is a completed prototype for our project Design Thinking Lab (DTL)**
