@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { getStorage, setStorage, STORAGE_KEYS, addPoints, updateStreak } from '../utils/storage';
-import { Calendar as CalIcon, Plus, AlertCircle, ArrowLeft, Zap, List, Save, X, Camera, Upload, CheckCircle, Trash2 } from 'lucide-react';
+import { Calendar as CalIcon, Plus, AlertCircle, ArrowLeft, Zap, List, Save, X, Camera, Upload, CheckCircle, Trash2, Pencil } from 'lucide-react';
 import { useRef } from 'react';
 import TimeSelector from '../components/TimeSelector';
 import TimeOfDaySelector from '../components/TimeOfDaySelector';
@@ -47,6 +47,8 @@ const Schedule = () => {
         moods: []
     });
 
+    const [editingTaskId, setEditingTaskId] = useState(null);
+
     const availableMoods = [
         { id: 'focused', label: 'Focused' },
         { id: 'low-energy', label: 'Low Energy' },
@@ -90,11 +92,37 @@ const Schedule = () => {
     // Handlers for Schedule Future Task
     const handleScheduleSubmit = (e) => {
         e.preventDefault();
-        const newTasks = [...scheduledTasks, { id: Date.now(), ...scheduleFormData }];
-        setStorage(STORAGE_KEYS.SCHEDULED_TASKS, newTasks);
-        setScheduledTasks(newTasks);
+
+        if (editingTaskId) {
+            // Update existing
+            const updated = scheduledTasks.map(t =>
+                t.id === editingTaskId ? { ...t, ...scheduleFormData } : t
+            );
+            setStorage(STORAGE_KEYS.SCHEDULED_TASKS, updated);
+            setScheduledTasks(updated);
+            setEditingTaskId(null);
+        } else {
+            // Create new
+            const newTasks = [...scheduledTasks, { id: Date.now(), ...scheduleFormData }];
+            setStorage(STORAGE_KEYS.SCHEDULED_TASKS, newTasks);
+            setScheduledTasks(newTasks);
+        }
+
         setShowScheduleForm(false);
         setScheduleFormData({ name: '', workToComplete: '', startDate: '', dueDate: '' });
+    };
+
+    const handleEditTask = (task) => {
+        setScheduleFormData({
+            name: task.name,
+            workToComplete: task.workToComplete || '',
+            startDate: task.startDate,
+            dueDate: task.dueDate
+        });
+        setEditingTaskId(task.id);
+        setShowScheduleForm(true);
+        setShowDailyTaskForm(false);
+        setShowAdhocForm(false);
     };
 
     // Handlers for Daily Task
@@ -343,7 +371,7 @@ const Schedule = () => {
                 {/* Schedule Future Form */}
                 {showScheduleForm && (
                     <div style={{ animation: 'fadeIn 0.3s ease-in-out' }}>
-                        <h3 style={{ marginBottom: '1rem' }}>New Future Plan</h3>
+                        <h3 style={{ marginBottom: '1rem' }}>{editingTaskId ? 'Edit Plan' : 'New Future Plan'}</h3>
                         <form onSubmit={handleScheduleSubmit} className="card" style={{ marginBottom: '3rem', borderLeft: '4px solid #0284c7' }}>
                             <div style={{ marginBottom: '1rem' }}>
                                 <label>Task Name</label>
@@ -466,24 +494,22 @@ const Schedule = () => {
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
-                                    <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                                        {task.time && `Duration: ${task.time}m`}
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <button
-                                            style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}
-                                            onClick={() => handleDeleteDailyTask(task.id)}
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                        <button
-                                            className="btn-primary"
-                                            style={{ background: 'var(--color-success)', fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
-                                            onClick={() => navigate(`/complete/${task.id}`)}
-                                        >
-                                            Task Done
-                                        </button>
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #eee', gap: '0.5rem' }}>
+                                    <button
+                                        className="btn-primary"
+                                        style={{ background: 'var(--color-success)', fontSize: '0.85rem', padding: '0.5rem 1rem' }}
+                                        onClick={() => navigate(`/complete/${task.id}`)}
+                                    >
+                                        <CheckCircle size={16} style={{ marginRight: '0.25rem' }} /> Task Done
+                                    </button>
+                                    <button
+                                        style={{ background: '#fee2e2', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem 1rem', borderRadius: '2rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                        onClick={() => handleDeleteDailyTask(task.id)}
+                                    >
+                                        <Trash2 size={16} /> Delete
+                                    </button>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginLeft: 'auto' }}>
+                                        {task.time && `${task.time}m`}
                                     </div>
                                 </div>
                             </div>
@@ -529,32 +555,43 @@ const Schedule = () => {
                                         )}
                                     </div>
 
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
-                                        <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                                            <span>Start: {task.startDate}</span>
-                                            <span>Due: {task.dueDate}</span>
-                                        </div>
-                                        <button
-                                            className="btn-primary"
-                                            style={{ background: 'var(--color-success)', fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
-                                            onClick={() => navigate(`/complete/${task.id}`)}
-                                        >
-                                            Task Done
-                                        </button>
-                                        <button
-                                            style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}
-                                            onClick={() => handleCancelScheduledTask(task.id)}
-                                            title="Cancel Plan"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
+                                    <div style={{ marginTop: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                                        <span style={{ marginRight: '1rem' }}>Start: {task.startDate}</span>
+                                        <span>Due: {task.dueDate}</span>
+                                    </div>
+
+                                    <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '0.75rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
+
                                         <button
                                             className="btn-secondary"
-                                            style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
+                                            style={{ fontSize: '0.8rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
                                             onClick={() => setLoggingTask(task)}
                                         >
-                                            Done some work
+                                            <Zap size={14} /> Done some work
                                         </button>
+
+                                        <button
+                                            className="btn-primary"
+                                            style={{ background: 'var(--color-success)', fontSize: '0.85rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                            onClick={() => navigate(`/complete/${task.id}`)}
+                                        >
+                                            <CheckCircle size={16} /> Task Done
+                                        </button>
+
+                                        <button
+                                            onClick={() => handleEditTask(task)}
+                                            style={{ background: '#fef3c7', color: '#d97706', border: 'none', cursor: 'pointer', padding: '0.5rem 1rem', borderRadius: '2rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                        >
+                                            <Pencil size={14} /> Edit
+                                        </button>
+
+                                        <button
+                                            style={{ background: '#fee2e2', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem 1rem', borderRadius: '2rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                            onClick={() => handleCancelScheduledTask(task.id)}
+                                        >
+                                            <Trash2 size={14} /> Delete
+                                        </button>
+
                                     </div>
 
                                     {/* Logging Form */}

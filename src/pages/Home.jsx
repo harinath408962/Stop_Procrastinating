@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { getStorage, STORAGE_KEYS } from '../utils/storage';
 import { generateSmartInsight } from '../utils/ml/recommender';
-import { Trophy, ArrowRight, Activity, Calendar, Zap } from 'lucide-react';
+import { Trophy, ArrowRight, Activity, Calendar, Zap, Download, AlertTriangle } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -15,6 +16,25 @@ const Home = () => {
     const [insights, setInsights] = useState([]);
     const [topDistractions, setTopDistractions] = useState([]);
     const [lastReflection, setLastReflection] = useState(null);
+    const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+    useEffect(() => {
+        const handler = (e) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        return () => window.removeEventListener('beforeinstallprompt', handler);
+    }, []);
+
+    const handleInstallClick = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            setDeferredPrompt(null);
+        }
+    };
 
     useEffect(() => {
         // Load user data
@@ -111,6 +131,7 @@ const Home = () => {
                 distractionTime: distTime,
                 distractionCount: distCount,
                 tomorrowGoal: tomorrowGoal,
+                workTime: totalWorkTime,
                 isLive: true
             });
         };
@@ -172,12 +193,23 @@ const Home = () => {
 
                     {topDistractions.length > 0 && (
                         <div>
-                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--color-text-primary)' }}>Top Distractions Today:</div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--color-text-primary)', marginBottom: '0.75rem' }}>Top Distractions Today:</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                 {topDistractions.map((d, i) => (
-                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fef2f2', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #fecaca' }}>
-                                        <span style={{ color: '#ef4444', fontWeight: '500' }}>{d.name}</span>
-                                        <span style={{ fontWeight: 'bold', color: '#b91c1c' }}>{d.duration}m</span>
+                                    <div key={i} style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        background: '#fff1f2',
+                                        padding: '0.75rem 1rem',
+                                        borderRadius: 'var(--radius-md)',
+                                        borderLeft: '4px solid #f43f5e'
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <AlertTriangle size={16} color="#f43f5e" />
+                                            <span style={{ color: '#be123c', fontWeight: '500' }}>{d.name}</span>
+                                        </div>
+                                        <span style={{ fontWeight: 'bold', color: '#be123c' }}>{d.duration}m</span>
                                     </div>
                                 ))}
                             </div>
@@ -202,55 +234,97 @@ const Home = () => {
                             <Activity size={18} />
                             Today's Live Snapshot
                         </h3>
-
                         <div className="card">
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                                    <span style={{ color: '#15803d', fontWeight: 'bold' }}>Work {lastReflection.workScore}%</span>
-                                    <span style={{ color: '#b91c1c', fontWeight: 'bold' }}>Procrastinate {lastReflection.procrastinationScore}%</span>
+                            <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+                                {/* Donut Chart */}
+                                <div style={{ width: '160px', height: '160px', position: 'relative' }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={[
+                                                    { name: 'Work', value: lastReflection.workScore, color: '#10b981' },
+                                                    { name: 'Procrastination', value: lastReflection.procrastinationScore, color: '#ef4444' }
+                                                ]}
+                                                dataKey="value"
+                                                innerRadius={50}
+                                                outerRadius={70}
+                                                startAngle={90}
+                                                endAngle={-270}
+                                                paddingAngle={5}
+                                            >
+                                                <Cell key="work" fill="#10b981" />
+                                                <Cell key="proc" fill="#ef4444" />
+                                            </Pie>
+                                            <Tooltip />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: lastReflection.workScore >= 50 ? '#10b981' : '#ef4444' }}>
+                                            {lastReflection.workScore}%
+                                        </div>
+                                        <div style={{ fontSize: '0.6rem', color: 'var(--color-text-secondary)' }}>Focus</div>
+                                    </div>
                                 </div>
-                                <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden', display: 'flex' }}>
-                                    <div style={{ width: `${lastReflection.workScore}%`, background: '#22c55e' }}></div>
-                                    <div style={{ width: `${lastReflection.procrastinationScore}%`, background: '#ef4444' }}></div>
-                                </div>
-                            </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #f1f5f9' }}>
-                                <div style={{ textAlign: 'center' }}>
-                                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>{lastReflection.tasksDoneCount || 0}</div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Tasks Done</div>
-                                </div>
-                                <div style={{ textAlign: 'center' }}>
-                                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--color-warning)' }}>{lastReflection.pointsScored || 0}</div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Points Scored</div>
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '2rem', marginBottom: '1.5rem' }}>
-                                <div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Distractions</div>
-                                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{lastReflection.distractionTime || 0}m</div>
-                                </div>
-                                <div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Count</div>
-                                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{lastReflection.distractionCount || 0}</div>
+                                {/* Stats List */}
+                                <div style={{ flex: 1, minWidth: '150px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                                        <div style={{ textAlign: 'center', padding: '0.5rem', background: '#f0fdf4', borderRadius: '8px' }}>
+                                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#15803d' }}>{lastReflection.tasksDoneCount || 0}</div>
+                                            <div style={{ fontSize: '0.7rem', color: '#166534' }}>Tasks Done</div>
+                                        </div>
+                                        <div style={{ textAlign: 'center', padding: '0.5rem', background: '#fafaebb', borderRadius: '8px', border: '1px solid #fef08a' }}>
+                                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#854d0e' }}>{lastReflection.pointsScored || 0}</div>
+                                            <div style={{ fontSize: '0.7rem', color: '#854d0e' }}>Points</div>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                                        <span>Worked:</span>
+                                        <strong>{lastReflection.workTime || 0}m</strong>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginTop: '0.25rem' }}>
+                                        <span>Distracted:</span>
+                                        <strong>{lastReflection.distractionTime || 0}m</strong>
+                                    </div>
                                 </div>
                             </div>
 
                             {lastReflection.tomorrowGoal && (
-                                <div style={{ padding: '1rem', background: 'var(--color-bg-accent)', borderRadius: 'var(--radius-md)' }}>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
-                                        <Calendar size={14} />
-                                        {new Date(lastReflection.date).toDateString() === new Date().toDateString() ? 'Goal for Tomorrow' : 'Target set for Today'}
+                                <div style={{ padding: '0.75rem', background: 'var(--color-bg-accent)', borderRadius: 'var(--radius-md)', marginTop: '1rem' }}>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
+                                        <Calendar size={12} />
+                                        {new Date(lastReflection.date).toDateString() === new Date().toDateString() ? 'Goal for Tomorrow' : 'Target'}
                                     </div>
-                                    <div style={{ fontWeight: 500 }}>{lastReflection.tomorrowGoal}</div>
+                                    <div style={{ fontWeight: 500, fontSize: '0.9rem' }}>{lastReflection.tomorrowGoal}</div>
                                 </div>
                             )}
                         </div>
                     </div>
                 )}
+                {/* Install Button (Floating or inline) */}
+                {deferredPrompt && (
+                    <div style={{ marginTop: '2rem' }}>
+                        <button
+                            onClick={handleInstallClick}
+                            style={{
+                                background: 'var(--color-text-primary)',
+                                color: 'white',
+                                border: 'none',
+                                padding: '0.75rem 1.5rem',
+                                borderRadius: '2rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                margin: '0 auto',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <Download size={18} /> Install App
+                        </button>
+                    </div>
+                )}
             </div>
-        </Layout>
+        </Layout >
     );
 };
 

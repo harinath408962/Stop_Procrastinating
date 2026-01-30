@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { getStorage, setStorage, STORAGE_KEYS } from '../utils/storage';
 import { logEvent } from '../utils/analytics';
-import { PieChart, Clock, Target, Calendar, CheckCircle, Trophy, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { Clock, Target, Calendar, CheckCircle, Trophy, ArrowLeft, AlertTriangle, Activity } from 'lucide-react';
 
 const Reflection = () => {
     const navigate = useNavigate();
@@ -161,101 +162,104 @@ const Reflection = () => {
                     <h2 style={{ margin: 0 }}>Today's Reflection</h2>
                 </div>
 
-                <form onSubmit={handleSubmit} className="card">
+                <form onSubmit={handleSubmit}>
 
-                    {/* 1. Overall Work Score */}
-                    <div style={{
-                        marginBottom: '1.5rem',
-                        padding: '1.5rem',
-                        background: '#f0fdf4',
-                        borderRadius: 'var(--radius-md)',
-                        border: '1px solid #bbf7d0',
-                        textAlign: 'center'
-                    }}>
-                        <div style={{ fontSize: '0.9rem', color: '#166534', marginBottom: '0.25rem' }}>Overall Focus Score</div>
-                        <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#15803d' }}>{workScore}%</div>
-                    </div>
-
-                    {/* 2. Procrastination Score */}
-                    <div style={{
-                        marginBottom: '2rem',
-                        padding: '1rem',
-                        background: '#fef2f2',
-                        borderRadius: 'var(--radius-md)',
-                        border: '1px solid #fecaca',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                    }}>
-                        <span style={{ color: '#991b1b', fontWeight: '500' }}>Procrastination Level</span>
-                        <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>{procrastinationScore}%</span>
-                    </div>
-
-                    {/* 3. Time Spent Stats */}
-                    <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Time Breakdown</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
-                        <div className="card" style={{ padding: '1rem', textAlign: 'center', background: 'var(--color-bg-secondary)' }}>
-                            <CheckCircle size={24} style={{ color: 'var(--color-success)', marginBottom: '0.5rem' }} />
-                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{totalTaskTime}m</div>
-                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Work Time</div>
+                    {/* 1. Overall Work Score (Donut Chart) */}
+                    <div className="card" style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', flexWrap: 'wrap' }}>
+                        <div style={{ width: '180px', height: '180px', position: 'relative' }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={[
+                                            { name: 'Work', value: workScore, color: '#10b981' },
+                                            { name: 'Procrastination', value: procrastinationScore, color: '#ef4444' }
+                                        ]}
+                                        dataKey="value"
+                                        innerRadius={60}
+                                        outerRadius={80}
+                                        startAngle={90}
+                                        endAngle={-270}
+                                        paddingAngle={5}
+                                    >
+                                        <Cell key="work" fill="#10b981" />
+                                        <Cell key="proc" fill="#ef4444" />
+                                    </Pie>
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: workScore >= 50 ? '#10b981' : '#ef4444' }}>
+                                    {workScore}%
+                                </div>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)' }}>Focus</div>
+                            </div>
                         </div>
-                        <div className="card" style={{ padding: '1rem', textAlign: 'center', background: 'var(--color-bg-secondary)' }}>
-                            <AlertTriangle size={24} style={{ color: 'var(--color-warning)', marginBottom: '0.5rem' }} />
-                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{totalDistractionTime}m</div>
-                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Distracted</div>
+
+                        <div style={{ textAlign: 'left', padding: '1rem' }}>
+                            <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.2rem' }}>Day Summary</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
+                                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#10b981' }}></div>
+                                    <span>Productive: <strong>{totalTaskTime}m</strong></span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
+                                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444' }}></div>
+                                    <span>Distracted: <strong>{totalDistractionTime}m</strong></span>
+                                </div>
+                                <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                                    Tasks Done: <strong>{tasksDoneCount}</strong> | Points: <strong>{pointsScored}</strong>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* 4. Today's Data List */}
-                    <div style={{ marginBottom: '2rem' }}>
-                        <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Today's Activity Log</h3>
-
-                        <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Today's Activity Log</h3>
+                    {/* 2. Today's Activity Log (Timeline Style) */}
+                    <div className="card" style={{ marginBottom: '2rem' }}>
+                        <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Activity size={18} /> Activity Log
+                        </h3>
 
                         {(todayTasks.length === 0 && todayDistractions.length === 0 && todayWorkLogs.length === 0) ? (
-                            <p style={{ color: 'var(--color-text-secondary)', fontStyle: 'italic' }}>No activity recorded yet.</p>
+                            <p style={{ color: 'var(--color-text-secondary)', fontStyle: 'italic', textAlign: 'center', padding: '1rem' }}>No activity recorded yet.</p>
                         ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                 {/* Tasks */}
                                 {todayTasks.map((t, i) => (
-                                    <div key={`task-${i}`} style={{
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        padding: '0.75rem',
-                                        background: 'rgba(34, 197, 94, 0.1)',
-                                        borderRadius: 'var(--radius-sm)',
-                                        borderLeft: '4px solid var(--color-success)'
-                                    }}>
-                                        <span>{t.title || t.name} <strong style={{ color: 'var(--color-success)' }}>(Done)</strong></span>
-                                        <strong>{t.timeTaken || 0}m</strong>
+                                    <div key={`task-${i}`} style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--color-bg-secondary)' }}>
+                                        <div style={{ padding: '0.5rem', borderRadius: '50%', background: '#dcfce7', color: '#15803d' }}>
+                                            <CheckCircle size={16} />
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontWeight: 500 }}>{t.title || t.name}</div>
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Completed Task</div>
+                                        </div>
+                                        <div style={{ fontWeight: 'bold', color: '#15803d' }}>{t.timeTaken || 0}m</div>
                                     </div>
                                 ))}
                                 {/* Partial Logs */}
                                 {todayWorkLogs.map((log, i) => (
-                                    <div key={`log-${i}`} style={{
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        padding: '0.75rem',
-                                        background: 'rgba(59, 130, 246, 0.1)',
-                                        borderRadius: 'var(--radius-sm)',
-                                        borderLeft: '4px solid #3b82f6'
-                                    }}>
-                                        <span>{log.taskTitle} <small>(Work Log)</small></span>
-                                        <strong>{log.duration}m</strong>
+                                    <div key={`log-${i}`} style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--color-bg-secondary)' }}>
+                                        <div style={{ padding: '0.5rem', borderRadius: '50%', background: '#dbeafe', color: '#1d4ed8' }}>
+                                            <Clock size={16} />
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontWeight: 500 }}>{log.taskTitle}</div>
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Work Session</div>
+                                        </div>
+                                        <div style={{ fontWeight: 'bold', color: '#1d4ed8' }}>{log.duration}m</div>
                                     </div>
                                 ))}
                                 {/* Distractions */}
                                 {todayDistractions.map((log, i) => (
-                                    <div key={`dist-${i}`} style={{
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        padding: '0.75rem',
-                                        background: 'rgba(239, 68, 68, 0.1)',
-                                        borderRadius: 'var(--radius-sm)',
-                                        borderLeft: '4px solid var(--color-danger)'
-                                    }}>
-                                        <span>{log.app} <small>({log.reasons.join(', ')})</small></span>
-                                        <strong>{log.duration}m</strong>
+                                    <div key={`dist-${i}`} style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--color-bg-secondary)' }}>
+                                        <div style={{ padding: '0.5rem', borderRadius: '50%', background: '#fee2e2', color: '#b91c1c' }}>
+                                            <AlertTriangle size={16} />
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontWeight: 500 }}>{log.app}</div>
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{log.reasons.join(', ')}</div>
+                                        </div>
+                                        <div style={{ fontWeight: 'bold', color: '#b91c1c' }}>{log.duration}m</div>
                                     </div>
                                 ))}
                             </div>

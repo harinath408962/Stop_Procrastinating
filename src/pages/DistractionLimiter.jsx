@@ -263,19 +263,53 @@ const DistractionLimiter = () => {
                     <h2>Log Distraction</h2>
 
                     {!selectedDistraction ? (
-                        <div style={{ display: 'grid', gap: '1rem' }}>
-                            <p>Which app did you use?</p>
-                            {distractions.map(d => (
+                        <div style={{ display: 'grid', gap: '1.5rem' }}>
+                            <p style={{ textAlign: 'center', color: 'var(--color-text-secondary)' }}>What's pulling your attention?</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+                                {distractions.map(d => (
+                                    <button
+                                        key={d.id}
+                                        onClick={() => setSelectedDistraction(d)}
+                                        style={{
+                                            textAlign: 'left',
+                                            cursor: 'pointer',
+                                            border: '1px solid var(--color-bg-secondary)',
+                                            background: 'white',
+                                            padding: '1.25rem',
+                                            borderRadius: 'var(--radius-lg)',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                                            transition: 'transform 0.1s, border-color 0.1s',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between'
+                                        }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--color-bg-secondary)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                                    >
+                                        <div style={{ fontWeight: '600', fontSize: '1.1rem', color: 'var(--color-text-primary)' }}>{d.name}</div>
+                                        <ArrowLeft size={16} style={{ transform: 'rotate(180deg)', color: 'var(--color-text-secondary)' }} />
+                                    </button>
+                                ))}
                                 <button
-                                    key={d.id}
-                                    className="card"
-                                    onClick={() => setSelectedDistraction(d)}
-                                    style={{ textAlign: 'left', cursor: 'pointer', borderColor: 'var(--color-primary)' }}
+                                    onClick={() => setMode('config')}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '0.5rem',
+                                        cursor: 'pointer',
+                                        border: '2px dashed var(--color-bg-secondary)',
+                                        background: 'transparent',
+                                        padding: '1rem',
+                                        borderRadius: 'var(--radius-lg)',
+                                        color: 'var(--color-text-secondary)',
+                                        fontWeight: '500'
+                                    }}
                                 >
-                                    <strong>{d.name}</strong>
+                                    <Plus size={20} />
+                                    <span>Add New</span>
                                 </button>
-                            ))}
-                            {distractions.length === 0 && <p>No distractions configured. Go back and add some!</p>}
+                            </div>
                         </div>
                     ) : (
                         <form onSubmit={handleLogSubmit} className="card">
@@ -353,23 +387,43 @@ const DistractionLimiter = () => {
                 <ShieldAlert size={64} style={{ color: 'var(--color-text-accent)', marginBottom: '1rem' }} />
                 <h2 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Distracted?</h2>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'grid', gap: '1rem', width: '100%', maxWidth: '320px', margin: '0 auto' }}>
                     <button
                         className="btn-primary"
-                        style={{ padding: '1.5rem', fontSize: '1.25rem', background: '#ef4444' }} // Red for Yes (Honesty)
+                        style={{
+                            padding: '1.25rem',
+                            fontSize: '1.1rem',
+                            background: '#fee2e2',
+                            color: '#b91c1c',
+                            border: '1px solid #fecaca',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.75rem',
+                            borderRadius: 'var(--radius-lg)'
+                        }}
                         onClick={() => { resetLoggingState(); setMode('logging'); }}
                     >
-                        Yes, I gave in.
+                        <ShieldAlert size={24} /> Yes, I gave in
                     </button>
-
-
 
                     <button
                         className="btn-primary"
-                        style={{ padding: '1rem', fontSize: '1.1rem', background: '#10b981' }} // Green for No
+                        style={{
+                            padding: '1.25rem',
+                            fontSize: '1.1rem',
+                            background: '#dcfce7',
+                            color: '#15803d',
+                            border: '1px solid #bbf7d0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.75rem',
+                            borderRadius: 'var(--radius-lg)'
+                        }}
                         onClick={() => setMode('calm')}
                     >
-                        No, I'm focused.
+                        <CheckCircle size={24} /> No, I'm focused
                     </button>
                 </div>
 
