@@ -6,7 +6,7 @@ import { getStorage, clearAllStorage, forceSyncAll, STORAGE_KEYS } from '../util
 import { auth } from '../utils/firebase';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sun, Download, Trash2, LogOut, User, Info, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Moon, Sun, Download, Trash2, LogOut, User, Info, ArrowLeft, RefreshCw, MessageSquare } from 'lucide-react';
 import SyncStatus from '../components/SyncStatus';
 
 const Settings = () => {
@@ -173,6 +173,32 @@ const Settings = () => {
                                 </button>
                             </div>
                         )}
+                    </div>
+
+                    {/* Feedback */}
+                    <div className="card">
+                        <h3 style={{ marginTop: 0, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <MessageSquare size={20} /> Feedback
+                        </h3>
+                        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                            Help us improve! Share your experience, report bugs, or suggest new features.
+                        </p>
+                        <a
+                            href="https://forms.gle/fh9NiUWpYispsEka6"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-primary"
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem',
+                                textDecoration: 'none',
+                                width: '100%'
+                            }}
+                        >
+                            <MessageSquare size={18} /> Send Feedback / Suggestions
+                        </a>
                     </div>
 
                     {/* About */}
