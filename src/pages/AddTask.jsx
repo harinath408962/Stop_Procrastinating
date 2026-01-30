@@ -11,7 +11,6 @@ const AddTask = () => {
     const [formData, setFormData] = useState({
         title: '',
         smallStep: '',
-        time: '15 mins',
         moods: []
     });
 
@@ -34,8 +33,7 @@ const AddTask = () => {
         setStorage(STORAGE_KEYS.TASKS, [newTask, ...tasks]);
         logEvent('task_create', {
             task_id: newTask.id,
-            title: newTask.title,
-            expected_time: formData.time
+            title: newTask.title
         });
         navigate('/tasks');
     };
@@ -92,16 +90,7 @@ const AddTask = () => {
                         <small style={{ color: 'var(--color-text-secondary)' }}>Just write what you will do in the first 2 minutes.</small>
                     </div>
 
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label>Expected Time (Minutes)</label>
-                        <input
-                            type="number"
-                            required
-                            value={formData.time}
-                            onChange={e => setFormData({ ...formData, time: e.target.value })}
-                            placeholder="e.g. 30"
-                        />
-                    </div>
+
 
                     <div style={{ marginBottom: '1.5rem' }}>
                         <label>Best for Mood (Optional)</label>

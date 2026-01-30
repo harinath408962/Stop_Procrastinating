@@ -2,13 +2,24 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { getStorage, setStorage, STORAGE_KEYS, addPoints } from '../utils/storage';
-import { Plus, CheckCircle, Clock, AlertCircle, ArrowLeft, Hourglass, Save, X } from 'lucide-react';
+import { Plus, CheckCircle, Clock, AlertCircle, ArrowLeft, Hourglass, Save, X, Trash2 } from 'lucide-react';
 
 const TaskList = () => {
     const navigate = useNavigate();
     const [tasks, setTasks] = useState([]);
     const [mood, setMood] = useState(null);
     const [activePlans, setActivePlans] = useState([]);
+
+    const handleDelete = (taskId) => {
+        if (window.confirm('Are you sure you want to delete this task?')) {
+            const updatedTasks = tasks.filter(t => t.id !== taskId);
+            setTasks(updatedTasks);
+            // We need to update existing storage, which contains ALL tasks (completed and not)
+            const allTasks = getStorage(STORAGE_KEYS.TASKS, []);
+            const newStorage = allTasks.filter(t => t.id !== taskId);
+            setStorage(STORAGE_KEYS.TASKS, newStorage);
+        }
+    };
 
     // Partial Progress State
     // Partial Progress State Removed
@@ -110,7 +121,11 @@ const TaskList = () => {
                                             <strong>Start with:</strong> {task.smallStep}
                                         </p>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                                            <Clock size={16} /> {task.time}
+                                            {task.time && (
+                                                <>
+                                                    <Clock size={16} /> {task.time}
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -122,6 +137,20 @@ const TaskList = () => {
                                         onClick={() => navigate(`/complete/${task.id}`)}
                                     >
                                         Task Done (Add Proof)
+                                    </button>
+                                    <button
+                                        style={{
+                                            background: 'transparent',
+                                            border: 'none',
+                                            color: '#ef4444',
+                                            marginLeft: '1rem',
+                                            cursor: 'pointer',
+                                            padding: '0.5rem'
+                                        }}
+                                        onClick={() => handleDelete(task.id)}
+                                        aria-label="Delete task"
+                                    >
+                                        <Trash2 size={18} />
                                     </button>
                                 </div>
                             </div>

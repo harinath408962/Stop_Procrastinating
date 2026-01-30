@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import { auth, googleProvider, db } from '../utils/firebase';
 import { signInWithPopup } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { getStorage, STORAGE_KEYS, setStorage, clearAllStorage } from '../utils/storage';
+import { getStorage, STORAGE_KEYS, setStorage, clearAllStorage, loadFromCloud } from '../utils/storage';
 import { LogIn, Loader } from 'lucide-react';
 
 const SignIn = () => {
@@ -28,16 +28,7 @@ const SignIn = () => {
                 // FIRST: Clear local storage to avoid bleeding previous user's data
                 clearAllStorage();
 
-                const cloudData = docSnap.data();
-
-                // For simplicity in this v1, Cloud is Truth for existing users
-                if (cloudData.tasks) setStorage(STORAGE_KEYS.TASKS, JSON.parse(cloudData.tasks));
-                if (cloudData.scheduled) setStorage(STORAGE_KEYS.SCHEDULED_TASKS, JSON.parse(cloudData.scheduled));
-                if (cloudData.reflections) setStorage(STORAGE_KEYS.REFLECTIONS, JSON.parse(cloudData.reflections));
-                if (cloudData.stats) setStorage(STORAGE_KEYS.USER_STATS, JSON.parse(cloudData.stats));
-                if (cloudData.mood) setStorage(STORAGE_KEYS.USER_MOOD, cloudData.mood);
-
-                console.log("Data synced from cloud!");
+                await loadFromCloud(user);
             } else {
                 // New user (in cloud): Push local data to cloud
                 const localData = {

@@ -241,7 +241,12 @@ const TaskComplete = () => {
                             {proofImage && <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--color-success)', textAlign: 'center' }}>Proof Attached!</div>}
                         </div>
 
-                        <button type="submit" className="btn-primary" style={{ width: '100%' }}>
+                        <button
+                            type="submit"
+                            className="btn-primary"
+                            style={{ width: '100%', opacity: !timeTaken ? 0.5 : 1, cursor: !timeTaken ? 'not-allowed' : 'pointer' }}
+                            disabled={!timeTaken}
+                        >
                             Mark as Completed
                         </button>
                     </form>

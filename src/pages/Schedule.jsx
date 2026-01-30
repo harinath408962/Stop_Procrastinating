@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { getStorage, setStorage, STORAGE_KEYS, addPoints, updateStreak } from '../utils/storage';
-import { Calendar as CalIcon, Plus, AlertCircle, ArrowLeft, Zap, List, Save, X, Camera, Upload, CheckCircle } from 'lucide-react';
+import { Calendar as CalIcon, Plus, AlertCircle, ArrowLeft, Zap, List, Save, X, Camera, Upload, CheckCircle, Trash2 } from 'lucide-react';
 import { useRef } from 'react';
 import TimeSelector from '../components/TimeSelector';
 import TimeOfDaySelector from '../components/TimeOfDaySelector';
@@ -42,7 +42,6 @@ const Schedule = () => {
     const [dailyFormData, setDailyFormData] = useState({
         title: '',
         smallStep: '',
-        time: '15 mins',
         moods: []
     });
 
@@ -107,7 +106,23 @@ const Schedule = () => {
         setStorage(STORAGE_KEYS.TASKS, newTasks);
         setDailyTasks(newTasks);
         setShowDailyTaskForm(false);
-        setDailyFormData({ title: '', smallStep: '', time: '15 mins', moods: [] });
+        setDailyFormData({ title: '', smallStep: '', moods: [] });
+    };
+
+    const handleDeleteDailyTask = (taskId) => {
+        if (window.confirm('Delete this daily task?')) {
+            const updated = dailyTasks.filter(t => t.id !== taskId);
+            setDailyTasks(updated);
+            setStorage(STORAGE_KEYS.TASKS, updated);
+        }
+    };
+
+    const handleCancelScheduledTask = (taskId) => {
+        if (window.confirm('Cancel this future plan?')) {
+            const updated = scheduledTasks.filter(t => t.id !== taskId);
+            setScheduledTasks(updated);
+            setStorage(STORAGE_KEYS.SCHEDULED_TASKS, updated);
+        }
     };
 
     const toggleMood = (moodId) => {
@@ -289,27 +304,7 @@ const Schedule = () => {
                                 <small style={{ color: 'var(--color-text-secondary)' }}>Just write what you will do in the first 2 minutes.</small>
                             </div>
 
-                            <div style={{ marginBottom: '1rem' }}>
-                                <label>Expected Time (Minutes)</label>
-                                <input
-                                    type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    required
-                                    value={dailyFormData.time}
-                                    onChange={e => {
-                                        const val = e.target.value;
-                                        if (val === '') {
-                                            setDailyFormData({ ...dailyFormData, time: val });
-                                        } else if (/^\d+$/.test(val)) {
-                                            if (parseInt(val, 10) <= 600) {
-                                                setDailyFormData({ ...dailyFormData, time: val });
-                                            }
-                                        }
-                                    }}
-                                    placeholder="e.g. 30 (max 600)"
-                                />
-                            </div>
+
 
                             <div style={{ marginBottom: '1.5rem' }}>
                                 <label>Best for Mood (Optional)</label>
@@ -414,7 +409,14 @@ const Schedule = () => {
 
                             <div style={{ display: 'flex', gap: '1rem' }}>
                                 <button type="button" onClick={() => setShowAdhocForm(false)} className="btn-secondary" style={{ flex: 1 }}>Cancel</button>
-                                <button type="submit" className="btn-primary" style={{ flex: 1 }}>Save Work</button>
+                                <button
+                                    type="submit"
+                                    className="btn-primary"
+                                    style={{ flex: 1, opacity: !adhocTime ? 0.5 : 1, cursor: !adhocTime ? 'not-allowed' : 'pointer' }}
+                                    disabled={!adhocTime}
+                                >
+                                    Save Work
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -463,15 +465,23 @@ const Schedule = () => {
 
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
                                     <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                                        Duration: {task.time}m
+                                        {task.time && `Duration: ${task.time}m`}
                                     </div>
-                                    <button
-                                        className="btn-primary"
-                                        style={{ background: 'var(--color-success)', fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
-                                        onClick={() => navigate(`/complete/${task.id}`)}
-                                    >
-                                        Task Done
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button
+                                            style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}
+                                            onClick={() => handleDeleteDailyTask(task.id)}
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                        <button
+                                            className="btn-primary"
+                                            style={{ background: 'var(--color-success)', fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
+                                            onClick={() => navigate(`/complete/${task.id}`)}
+                                        >
+                                            Task Done
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -527,6 +537,13 @@ const Schedule = () => {
                                             onClick={() => navigate(`/complete/${task.id}`)}
                                         >
                                             Task Done
+                                        </button>
+                                        <button
+                                            style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}
+                                            onClick={() => handleCancelScheduledTask(task.id)}
+                                            title="Cancel Plan"
+                                        >
+                                            <Trash2 size={16} />
                                         </button>
                                         <button
                                             className="btn-secondary"

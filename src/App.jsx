@@ -11,8 +11,21 @@ import Analysis from './pages/Analysis';
 import SignIn from './pages/SignIn';
 
 import Settings from './pages/Settings'; // v2
+import { useEffect } from 'react';
+import { auth } from './utils/firebase';
+import { loadFromCloud } from './utils/storage';
 
 function App() {
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged(user => {
+            if (user) {
+                // Auto-sync on app load/refresh if logged in
+                loadFromCloud(user);
+            }
+        });
+        return () => unsubscribe();
+    }, []);
+
     return (
         <HashRouter>
             <Routes>

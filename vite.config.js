@@ -9,6 +9,18 @@ export default defineConfig(({ command }) => {
     base: isProd ? '/Stop_Procrastinating/' : '/',
     build: {
       outDir: 'docs',
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('firebase')) {
+                return 'firebase';
+              }
+              return 'vendor';
+            }
+          }
+        }
+      }
     },
   };
 })

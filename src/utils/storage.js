@@ -1,5 +1,5 @@
 import { auth, db } from './firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 export const STORAGE_KEYS = {
     USER_MOOD: 'sp_user_mood',
@@ -12,10 +12,46 @@ export const STORAGE_KEYS = {
     EVENT_LOG: 'sp_event_log'
 };
 
+export const loadFromCloud = async (user) => {
+    if (!user) return;
+
+    try {
+        const userRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(userRef);
+
+        if (docSnap.exists()) {
+            const cloudData = docSnap.data();
+
+            // Helper to safe parse or return val
+            const parse = (val) => {
+                try { return typeof val === 'string' ? JSON.parse(val) : val; }
+                catch (e) { return val; }
+            };
+
+            // Map Cloud Fields back to Storage Keys
+            // We use 'true' (silent) for setStorage to avoid re-triggering cloud sync loop
+            if (cloudData.tasks) setStorage(STORAGE_KEYS.TASKS, parse(cloudData.tasks), true);
+            if (cloudData.scheduled) setStorage(STORAGE_KEYS.SCHEDULED_TASKS, parse(cloudData.scheduled), true);
+            if (cloudData.reflections) setStorage(STORAGE_KEYS.REFLECTIONS, parse(cloudData.reflections), true);
+            if (cloudData.stats) setStorage(STORAGE_KEYS.USER_STATS, parse(cloudData.stats), true);
+            if (cloudData.mood) setStorage(STORAGE_KEYS.USER_MOOD, cloudData.mood, true);
+            if (cloudData.distractions) setStorage(STORAGE_KEYS.DISTRACTION_LOGS, parse(cloudData.distractions), true);
+            if (cloudData.work_logs) setStorage(STORAGE_KEYS.WORK_LOGS, parse(cloudData.work_logs), true);
+
+            console.log("Full sync from cloud completed.");
+            // Dispatch specific event for UI to refresh if needed
+            window.dispatchEvent(new CustomEvent('sp-data-loaded'));
+        }
+    } catch (err) {
+        console.error("Error loading from cloud:", err);
+    }
+};
+
 const syncToCloud = async (key, value, silent = false) => {
     const user = auth.currentUser;
     if (!user) return; // Not logged in, local only
 
+    // ... existing sync logic ...
     try {
         const userRef = doc(db, "users", user.uid);
 
@@ -61,11 +97,13 @@ export const getStorage = (key, defaultValue = null) => {
     }
 };
 
-export const setStorage = (key, value) => {
+export const setStorage = (key, value, skipSync = false) => {
     try {
         localStorage.setItem(key, JSON.stringify(value));
-        // Trigger Cloud Sync
-        syncToCloud(key, value);
+        // Trigger Cloud Sync if not skipped
+        if (!skipSync) {
+            syncToCloud(key, value);
+        }
     } catch (error) {
         console.error(`Error writing ${key} to storage:`, error);
     }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { getStorage, setStorage, STORAGE_KEYS, addPoints, updateStreak } from '../utils/storage';
 import { logEvent } from '../utils/analytics';
-import { ShieldAlert, Settings, Plus, X, ArrowLeft, Camera, Upload, CheckCircle } from 'lucide-react';
+import { ShieldAlert, Settings, Plus, X, ArrowLeft, Camera, Upload, CheckCircle, Trash2, Pencil } from 'lucide-react';
 import { useRef } from 'react';
 import TimeOfDaySelector from '../components/TimeOfDaySelector';
 import TimeSelector from '../components/TimeSelector';
@@ -17,6 +17,7 @@ const DistractionLimiter = () => {
     const [newDistraction, setNewDistraction] = useState('');
     const [newReason, setNewReason] = useState('');
     const [reasonsList, setReasonsList] = useState([]);
+    const [editingId, setEditingId] = useState(null);
 
     // Logging State (Distraction)
     const [selectedDistraction, setSelectedDistraction] = useState(null);
@@ -43,17 +44,46 @@ const DistractionLimiter = () => {
 
     const saveDistractionType = () => {
         if (!newDistraction) return;
-        const updated = [...distractions, {
-            id: Date.now(),
-            name: newDistraction,
-            reasons: reasonsList.length > 0 ? reasonsList : ['General']
-        }];
+
+        let updated;
+        if (editingId) {
+            updated = distractions.map(d => d.id === editingId ? { ...d, name: newDistraction, reasons: reasonsList.length > 0 ? reasonsList : ['General'] } : d);
+        } else {
+            updated = [...distractions, {
+                id: Date.now(),
+                name: newDistraction,
+                reasons: reasonsList.length > 0 ? reasonsList : ['General']
+            }];
+        }
+
         setStorage('sp_distraction_types', updated);
         setDistractions(updated);
         setNewDistraction('');
         setReasonsList([]);
         setNewReason('');
+        setEditingId(null);
         setMode('initial');
+    };
+
+    const handleEditDistraction = (d) => {
+        setNewDistraction(d.name);
+        setReasonsList(d.reasons);
+        setEditingId(d.id);
+    };
+
+    const handleDeleteDistraction = (id) => {
+        if (window.confirm('Delete this distraction type?')) {
+            const updated = distractions.filter(d => d.id !== id);
+            setDistractions(updated);
+            setStorage('sp_distraction_types', updated);
+
+            // If we were editing this one, reset form
+            if (editingId === id) {
+                setEditingId(null);
+                setNewDistraction('');
+                setReasonsList([]);
+            }
+        }
     };
 
     const addReason = () => {
@@ -133,7 +163,7 @@ const DistractionLimiter = () => {
             <Layout>
                 <div className="container">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                        <h2>Add Distraction</h2>
+                        <h2>{editingId ? 'Edit Distraction' : 'Add Distraction'}</h2>
                         <button onClick={() => setMode('initial')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X /></button>
                     </div>
 
@@ -164,7 +194,42 @@ const DistractionLimiter = () => {
                             </div>
                         </div>
 
-                        <button className="btn-primary" onClick={saveDistractionType} style={{ width: '100%' }}>Save</button>
+                        <button className="btn-primary" onClick={saveDistractionType} style={{ width: '100%' }}>
+                            {editingId ? 'Update Distraction' : 'Save Distraction'}
+                        </button>
+                    </div>
+
+                    <div style={{ marginTop: '2rem' }}>
+                        <h3>Manage Distractions</h3>
+                        <div style={{ display: 'grid', gap: '0.5rem' }}>
+                            {distractions.map(d => (
+                                <div key={d.id} style={{
+                                    padding: '1rem',
+                                    background: 'var(--color-bg-secondary)',
+                                    borderRadius: 'var(--radius-md)',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                }}>
+                                    <span style={{ fontWeight: '500' }}>{d.name}</span>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button
+                                            onClick={() => handleEditDistraction(d)}
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)' }}
+                                        >
+                                            <Pencil size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteDistraction(d.id)}
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                            {distractions.length === 0 && <p style={{ color: 'var(--color-text-secondary)' }}>No distractions added yet.</p>}
+                        </div>
                     </div>
                 </div>
             </Layout>
@@ -246,7 +311,14 @@ const DistractionLimiter = () => {
 
                             <TimeOfDaySelector value={timeOfDay} onChange={setTimeOfDay} />
 
-                            <button type="submit" className="btn-primary" style={{ width: '100%' }}>Save Log</button>
+                            <button
+                                type="submit"
+                                className="btn-primary"
+                                style={{ width: '100%', opacity: !timeSpent ? 0.5 : 1, cursor: !timeSpent ? 'not-allowed' : 'pointer' }}
+                                disabled={!timeSpent}
+                            >
+                                Save Log
+                            </button>
                         </form>
                     )}
                 </div>
