@@ -15,81 +15,102 @@ const Analysis = () => {
     const [insights, setInsights] = useState([]);
 
     useEffect(() => {
+        // Fetch all raw data
+        const tasks = getStorage(STORAGE_KEYS.TASKS, []);
+        const scheduled = getStorage(STORAGE_KEYS.SCHEDULED_TASKS, []);
+        const workLogs = getStorage(STORAGE_KEYS.WORK_LOGS, []);
+        const distLogs = getStorage(STORAGE_KEYS.DISTRACTION_LOGS, []);
         const history = getStorage(STORAGE_KEYS.REFLECTIONS, []);
+
         const dailyData = {};
 
-        // 1. Process History
-        history.forEach(entry => {
-            const dateStr = new Date(entry.date).toDateString();
-            if (!dailyData[dateStr] || new Date(entry.date) > new Date(dailyData[dateStr].date)) {
-                dailyData[dateStr] = entry;
+        // Helper to init day
+        const getDay = (dateStr) => {
+            if (!dailyData[dateStr]) {
+                dailyData[dateStr] = {
+                    date: new Date(dateStr).toISOString(),
+                    taskTime: 0,
+                    distractionTime: 0,
+                    pointsScored: 0,
+                    workScore: 0,
+                    procrastinationScore: 0,
+                    tasksDoneCount: 0
+                };
+            }
+            return dailyData[dateStr];
+        };
+
+        // 1. Process Tasks (Regular + Scheduled)
+        [...tasks, ...scheduled].forEach(t => {
+            if (t.completed && t.completedAt) {
+                const dateStr = new Date(t.completedAt).toDateString();
+                const day = getDay(dateStr);
+
+                day.taskTime += (parseInt(t.timeTaken) || 0);
+                day.tasksDoneCount += 1;
+
+                // Points Logic
+                if (t.pointsEarned !== undefined) {
+                    day.pointsScored += t.pointsEarned;
+                } else {
+                    day.pointsScored += 10 + (parseInt(t.timeTaken) || 0);
+                }
             }
         });
 
-        // 2. Calculate Live Stats for Today
-        const calculateLiveToday = () => {
-            const todayDateStr = new Date().toDateString();
+        // 2. Process Work Logs
+        workLogs.forEach(log => {
+            if (log.date) {
+                const dateStr = new Date(log.date).toDateString();
+                const day = getDay(dateStr);
 
-            // Fetch Logs
-            const tasks = getStorage(STORAGE_KEYS.TASKS, []);
-            const scheduled = getStorage(STORAGE_KEYS.SCHEDULED_TASKS, []);
-            const workLogs = getStorage(STORAGE_KEYS.WORK_LOGS, []);
-            const distLogs = getStorage(STORAGE_KEYS.DISTRACTION_LOGS, []);
+                const duration = parseInt(log.duration) || 0;
+                day.taskTime += duration;
+                day.pointsScored += duration; // 1 pt/min
 
-            // Filter for Today
-            const todaysTasks = [...tasks, ...scheduled].filter(t =>
-                t.completed && t.completedAt && new Date(t.completedAt).toDateString() === todayDateStr
-            );
-            const todaysWorkLogs = workLogs.filter(l => new Date(l.date).toDateString() === todayDateStr);
-            const todaysDistractions = distLogs.filter(l => new Date(l.date).toDateString() === todayDateStr);
-
-            // Calculate Metrics
-            const taskTime = todaysTasks.reduce((acc, t) => acc + (parseInt(t.timeTaken) || 0), 0);
-            const partialTime = todaysWorkLogs.reduce((acc, l) => acc + (parseInt(l.duration) || 0), 0);
-            const totalWorkTime = taskTime + partialTime;
-
-            const distTime = todaysDistractions.reduce((acc, d) => acc + (parseInt(d.duration) || 0), 0);
-
-            // Points
-            const taskPoints = todaysTasks.reduce((acc, t) => {
-                if (t.pointsEarned !== undefined) return acc + t.pointsEarned;
-                return acc + 10 + (parseInt(t.timeTaken) || 0);
-            }, 0);
-            const workLogPoints = todaysWorkLogs.reduce((acc, l) => acc + (parseInt(l.duration) || 0), 0);
-            const totalPoints = taskPoints + workLogPoints;
-
-            // Scores
-            let workScore = 0;
-            let procrastinationScore = 0;
-            const totalActive = totalWorkTime + distTime;
-            if (totalActive > 0) {
-                procrastinationScore = Math.round((distTime / totalActive) * 100);
-                workScore = 100 - procrastinationScore;
+                // User logic: Work Logs count as "Tasks Done"
+                day.tasksDoneCount += 1;
             }
+        });
 
-            return {
-                date: new Date().toISOString(),
-                workScore,
-                procrastinationScore,
-                taskTime: totalWorkTime,
-                distractionTime: distTime,
-                pointsScored: totalPoints,
-                isLive: true
-            };
-        };
+        // 3. Process Distractions
+        distLogs.forEach(log => {
+            if (log.date) {
+                const dateStr = new Date(log.date).toDateString();
+                const day = getDay(dateStr);
+                day.distractionTime += (parseInt(log.duration) || 0);
+            }
+        });
 
-        const liveToday = calculateLiveToday();
+        // 4. Calculate Scores AND Merge Metadata from Reflections (if needed for debugging, but mostly we trust raw data now)
+        // We still need to ensure we show days that might ONLY have a reflection but no logs (unlikely, but safe)
+        history.forEach(entry => {
+            const dateStr = new Date(entry.date).toDateString();
+            if (!dailyData[dateStr]) {
+                // If it exists in reflection but somehow no raw data, keep it?
+                // Or just ignore it if we trust raw data 100%. 
+                // Let's keep it but trust raw data if we have it.
+                dailyData[dateStr] = { ...entry, date: new Date(dateStr).toISOString() };
+            }
+        });
 
-        // 3. Merge Live Today
-        // Always show today if we have active data OR if we just want the chart to be current
-        if (liveToday.taskTime > 0 || liveToday.distractionTime > 0 || liveToday.pointsScored > 0) {
-            const todayStr = new Date().toDateString();
-            dailyData[todayStr] = liveToday;
-        }
+        // Finalize Scores for calculated days
+        Object.keys(dailyData).forEach(key => {
+            const day = dailyData[key];
+            const totalActive = day.taskTime + day.distractionTime;
+            if (totalActive > 0) {
+                day.procrastinationScore = Math.round((day.distractionTime / totalActive) * 100);
+                day.workScore = 100 - day.procrastinationScore;
+            } else {
+                // Retain original scores if we didn't recalc them (e.g. from reflection only)
+                // or set to 0
+            }
+        });
 
         // Convert to array and sort
         const sorted = Object.values(dailyData).sort((a, b) => new Date(a.date) - new Date(b.date));
         setStats(sorted);
+
         // 5. ML Insights
         const generatedInsights = generateSmartInsight();
         setInsights(generatedInsights);

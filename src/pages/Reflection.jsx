@@ -67,9 +67,17 @@ const Reflection = () => {
         const totalWorkTime = completedTime + partialTime;
         setTotalTaskTime(totalWorkTime);
 
-        const totalDone = allCompleted.length;
+        const totalDone = allCompleted.length + todaysWorkLogs.length;
         setTasksDoneCount(totalDone);
-        setPointsScored((totalDone * 10) + (todaysWorkLogs.length * 2)); // Bonus for logged sessions
+
+        // Fix: Match Home.jsx points logic
+        const taskPoints = allCompleted.reduce((acc, t) => {
+            if (t.pointsEarned !== undefined) return acc + t.pointsEarned;
+            return acc + 10 + (parseInt(t.timeTaken) || 0);
+        }, 0);
+
+        const workLogPoints = todaysWorkLogs.reduce((acc, l) => acc + (parseInt(l.duration) || 0), 0);
+        setPointsScored(taskPoints + workLogPoints);
 
         // 3. Calculate Scores
         const totalActiveTime = totalWorkTime + distTime;
