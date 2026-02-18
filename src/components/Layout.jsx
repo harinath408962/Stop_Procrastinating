@@ -5,7 +5,9 @@ import { getStorage, STORAGE_KEYS, clearAllStorage } from '../utils/storage';
 import { auth } from '../utils/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { useTheme } from '../context/ThemeContext';
-import { requestNotificationPermission, checkAndSendNotifications } from '../utils/notifications';
+
+
+import { requestNotificationPermission, checkAndSendNotifications, initializeBackgroundNotifications } from '../utils/notifications';
 
 const Layout = ({ children }) => {
     const location = useLocation();
@@ -16,6 +18,9 @@ const Layout = ({ children }) => {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
+            if (currentUser) {
+                initializeBackgroundNotifications();
+            }
         });
         return () => unsubscribe();
     }, []);

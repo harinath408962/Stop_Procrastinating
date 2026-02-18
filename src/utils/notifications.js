@@ -3,6 +3,10 @@
  * Handles permission requests and sending system notifications.
  */
 
+import { messaging, db, auth } from './firebase'; // Ensure db/auth imported
+import { getToken } from 'firebase/messaging';
+import { doc, setDoc } from 'firebase/firestore';
+
 export const requestNotificationPermission = async () => {
     if (!('Notification' in window)) {
         console.log('This browser does not support desktop notification');
@@ -21,25 +25,67 @@ export const requestNotificationPermission = async () => {
     return false;
 };
 
+// --- Background Notification Setup ---
+export const initializeBackgroundNotifications = async () => {
+    if (!messaging) return; // Not supported
+
+    try {
+        const user = auth.currentUser;
+        if (!user) return; // Need user to save token
+
+        const permission = await requestNotificationPermission();
+        if (permission) {
+            const token = await getToken(messaging, {
+                vapidKey: 'BC3s2k0hQN9HOIxnyTzaj5SZCT8E_5WMJ_VhnQxxlz0_DVbTNXAwE4k0kmyY_yhqKCTtdZf8NeZ5S3UsF_GxL2I' // Placeholder: User needs to generate this pair in Firebase Console
+            }).catch(err => {
+                console.warn("Failed to get FCM token. VAPID key likely missing or invalid.", err);
+                return null;
+            });
+
+            if (token) {
+                // Save token to Firestore
+                await setDoc(doc(db, "users", user.uid), {
+                    fcmToken: token
+                }, { merge: true });
+                console.log("FCM Token saved to profile.");
+            }
+        }
+    } catch (err) {
+        console.error("Error initializing background notifications:", err);
+    }
+};
+// -------------------------------------
+
 export const sendNotification = (title, body, tag) => {
     if (Notification.permission === 'granted') {
         try {
-            // Check if service worker is active for mobile support, fallback to standard
+            const handleNotificationClick = (n) => {
+                n.onclick = (event) => {
+                    event.preventDefault(); // Prevent browser default focus if needed
+                    window.focus(); // Try to focus the tab/window
+                    n.close();
+                };
+            };
+
+            // Check if service worker is active for mobile support
             if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.ready.then((registration) => {
                     registration.showNotification(title, {
                         body,
-                        icon: '/vite.svg', // Verify this path exists or use a default
-                        tag, // Use tag to prevent duplicate notifications if needed
-                        vibrate: [200, 100, 200]
+                        icon: '/vite.svg',
+                        tag,
+                        vibrate: [200, 100, 200],
+                        data: { url: window.location.href } // Data for SW to handle click if implemented there
                     });
                 });
             } else {
-                new Notification(title, {
+                const n = new Notification(title, {
                     body,
                     icon: '/vite.svg',
-                    tag
+                    tag,
+                    requireInteraction: true // Keep it on screen until user interacts
                 });
+                handleNotificationClick(n);
             }
         } catch (e) {
             console.error("Notification failed:", e);
@@ -47,12 +93,14 @@ export const sendNotification = (title, body, tag) => {
     }
 };
 
+import { getStorage, STORAGE_KEYS } from './storage';
+
 /**
  * Checks for tasks due for reminder.
  * Should be called periodically (e.g., every minute).
  * 
  * @param {Array} tasks - Combined list of daily tasks and scheduled plans.
- * @returns {Array} - IDs of tasks that triggered a notification (to update lastNotified state if needed, though simpler to just rely on minute precision).
+ * @returns {Array} - IDs of tasks that triggered a notification.
  */
 export const checkAndSendNotifications = (tasks) => {
     const now = new Date();
@@ -68,6 +116,25 @@ export const checkAndSendNotifications = (tasks) => {
     if (lastRun === currentTime) return [];
 
     localStorage.setItem(lastRunKey, currentTime);
+
+    // --- Prepare "Goal for Tomorrow" ---
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowLink = tomorrow.setHours(0, 0, 0, 0);
+
+    // Get Scheduled Plans (Long term goals)
+    const scheduled = getStorage(STORAGE_KEYS.SCHEDULED_TASKS, []);
+    const tomorrowGoals = scheduled.filter(t => {
+        if (!t.startDate || !t.dueDate) return false;
+        const s = new Date(t.startDate).setHours(0, 0, 0, 0);
+        const e = new Date(t.dueDate).setHours(0, 0, 0, 0);
+        return tomorrowLink >= s && tomorrowLink <= e;
+    });
+
+    const tomorrowGoalText = tomorrowGoals.length > 0
+        ? `\n📅 Tomorrow: ${tomorrowGoals[0].name}`
+        : '';
+    // -----------------------------------
 
     const triggered = [];
 
@@ -108,11 +175,25 @@ export const checkAndSendNotifications = (tasks) => {
             }
 
             if (shouldNotify) {
-                sendNotification(
-                    "Time to focus! 🎯",
-                    `Reminder: ${task.title || task.name}`,
-                    task.id
-                );
+                // Motivational Messages
+                const motivations = [
+                    "You got this! 💪",
+                    "Success starts now. 🚀",
+                    "Do it for your future self. ✨",
+                    "Just 5 minutes. Go! ⏱️",
+                    "Small steps, big results. 📈"
+                ];
+                const randomMotivation = motivations[Math.floor(Math.random() * motivations.length)];
+
+                // Clear Goal Text + Tomorrow's Goal
+                const title = `Target: ${task.title || task.name}`;
+                const baseBody = task.smallStep
+                    ? `Step: ${task.smallStep}\n${randomMotivation}`
+                    : `Time to make progress.\n${randomMotivation}`;
+
+                const finalBody = `${baseBody}${tomorrowGoalText}`;
+
+                sendNotification(title, finalBody, task.id);
                 triggered.push(task.id);
             }
         }

@@ -17,3 +17,12 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 export const db = getFirestore(app);
+
+// Messaging (only supported in browser environments)
+let messaging = null;
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    import('firebase/messaging').then(({ getMessaging }) => {
+        messaging = getMessaging(app);
+    }).catch(err => console.log('Messaging not supported', err));
+}
+export { messaging };
