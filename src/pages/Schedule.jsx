@@ -37,14 +37,20 @@ const Schedule = () => {
         name: '',
         workToComplete: '',
         startDate: '',
-        dueDate: ''
+        dueDate: '',
+        reminderTime: '',
+        frequency: 'once',
+        repeatDays: []
     });
 
     // Daily Task Form Data
     const [dailyFormData, setDailyFormData] = useState({
         title: '',
         smallStep: '',
-        moods: []
+        moods: [],
+        reminderTime: '',
+        frequency: 'once', // once, daily, custom
+        repeatDays: [] // ['Mon', 'Tue']
     });
 
     const [editingTaskId, setEditingTaskId] = useState(null);
@@ -109,7 +115,8 @@ const Schedule = () => {
         }
 
         setShowScheduleForm(false);
-        setScheduleFormData({ name: '', workToComplete: '', startDate: '', dueDate: '' });
+        setShowScheduleForm(false);
+        setScheduleFormData({ name: '', workToComplete: '', startDate: '', dueDate: '', reminderTime: '', frequency: 'once', repeatDays: [] });
     };
 
     const handleEditTask = (task) => {
@@ -117,7 +124,10 @@ const Schedule = () => {
             name: task.name,
             workToComplete: task.workToComplete || '',
             startDate: task.startDate,
-            dueDate: task.dueDate
+            dueDate: task.dueDate,
+            reminderTime: task.reminderTime || '',
+            frequency: task.frequency || 'once',
+            repeatDays: task.repeatDays || []
         });
         setEditingTaskId(task.id);
         setShowScheduleForm(true);
@@ -138,7 +148,8 @@ const Schedule = () => {
         setStorage(STORAGE_KEYS.TASKS, newTasks);
         setDailyTasks(newTasks);
         setShowDailyTaskForm(false);
-        setDailyFormData({ title: '', smallStep: '', moods: [] });
+        setShowDailyTaskForm(false);
+        setDailyFormData({ title: '', smallStep: '', moods: [], reminderTime: '', frequency: 'once', repeatDays: [] });
     };
 
     const handleDeleteDailyTask = (taskId) => {
@@ -360,6 +371,62 @@ const Schedule = () => {
                                 </div>
                             </div>
 
+                            {/* Reminder Section */}
+                            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                                    <AlertCircle size={16} /> Reminder & frequency
+                                </label>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                                    <div>
+                                        <label style={{ fontSize: '0.85rem' }}>Time</label>
+                                        <input
+                                            type="time"
+                                            value={dailyFormData.reminderTime}
+                                            onChange={e => setDailyFormData({ ...dailyFormData, reminderTime: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.85rem' }}>Frequency</label>
+                                        <select
+                                            value={dailyFormData.frequency}
+                                            onChange={e => setDailyFormData({ ...dailyFormData, frequency: e.target.value })}
+                                            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                                        >
+                                            <option value="once">Once (Today)</option>
+                                            <option value="daily">Daily</option>
+                                            <option value="custom">Custom Days</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {dailyFormData.frequency === 'custom' && (
+                                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                                            <button
+                                                key={day}
+                                                type="button"
+                                                onClick={() => {
+                                                    const days = dailyFormData.repeatDays.includes(day)
+                                                        ? dailyFormData.repeatDays.filter(d => d !== day)
+                                                        : [...dailyFormData.repeatDays, day];
+                                                    setDailyFormData({ ...dailyFormData, repeatDays: days });
+                                                }}
+                                                style={{
+                                                    padding: '0.25rem 0.5rem',
+                                                    fontSize: '0.75rem',
+                                                    borderRadius: '4px',
+                                                    border: '1px solid var(--color-primary)',
+                                                    background: dailyFormData.repeatDays.includes(day) ? 'var(--color-primary)' : 'white',
+                                                    color: dailyFormData.repeatDays.includes(day) ? 'white' : 'var(--color-primary)',
+                                                }}
+                                            >
+                                                {day}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
                             <div style={{ display: 'flex', gap: '1rem' }}>
                                 <button type="button" onClick={() => setShowDailyTaskForm(false)} className="btn-secondary" style={{ flex: 1 }}>Cancel</button>
                                 <button type="submit" className="btn-primary" style={{ flex: 1 }}>Save Task</button>
@@ -394,6 +461,62 @@ const Schedule = () => {
                                     <label>Due Date</label>
                                     <input type="date" required value={scheduleFormData.dueDate} onChange={e => setScheduleFormData({ ...scheduleFormData, dueDate: e.target.value })} />
                                 </div>
+                            </div>
+
+                            {/* Reminder Section Future */}
+                            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                                    <AlertCircle size={16} /> Daily Reminder
+                                </label>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                                    <div>
+                                        <label style={{ fontSize: '0.85rem' }}>Time</label>
+                                        <input
+                                            type="time"
+                                            value={scheduleFormData.reminderTime}
+                                            onChange={e => setScheduleFormData({ ...scheduleFormData, reminderTime: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.85rem' }}>Working Days</label>
+                                        <select
+                                            value={scheduleFormData.frequency}
+                                            onChange={e => setScheduleFormData({ ...scheduleFormData, frequency: e.target.value })}
+                                            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                                        >
+                                            <option value="once">Every Day (Default)</option>
+                                            <option value="daily">Every Day</option>
+                                            <option value="custom">Custom Days</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {scheduleFormData.frequency === 'custom' && (
+                                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                                            <button
+                                                key={day}
+                                                type="button"
+                                                onClick={() => {
+                                                    const days = scheduleFormData.repeatDays.includes(day)
+                                                        ? scheduleFormData.repeatDays.filter(d => d !== day)
+                                                        : [...scheduleFormData.repeatDays, day];
+                                                    setScheduleFormData({ ...scheduleFormData, repeatDays: days });
+                                                }}
+                                                style={{
+                                                    padding: '0.25rem 0.5rem',
+                                                    fontSize: '0.75rem',
+                                                    borderRadius: '4px',
+                                                    border: '1px solid var(--color-primary)',
+                                                    background: scheduleFormData.repeatDays.includes(day) ? 'var(--color-primary)' : 'white',
+                                                    color: scheduleFormData.repeatDays.includes(day) ? 'white' : 'var(--color-primary)',
+                                                }}
+                                            >
+                                                {day}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div style={{ display: 'flex', gap: '1rem' }}>
                                 <button type="button" onClick={() => setShowScheduleForm(false)} className="btn-secondary" style={{ flex: 1 }}>Cancel</button>
@@ -492,6 +615,23 @@ const Schedule = () => {
                                         </div>
                                         <p style={{ margin: '0 0 0.5rem', color: 'var(--color-text-primary)' }}>{task.smallStep}</p>
                                     </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.2rem' }}>
+                                        {task.reminderTime && (
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                                <AlertCircle size={10} /> {task.reminderTime}
+                                            </span>
+                                        )}
+                                        {task.frequency === 'custom' && (
+                                            <span style={{ fontSize: '0.65rem', color: 'var(--color-text-secondary)' }}>
+                                                {task.repeatDays.join(', ')}
+                                            </span>
+                                        )}
+                                        {task.frequency === 'daily' && (
+                                            <span style={{ fontSize: '0.65rem', color: 'var(--color-text-secondary)' }}>
+                                                Daily
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #eee', gap: '0.5rem' }}>
@@ -536,6 +676,14 @@ const Schedule = () => {
                                         <div>
                                             <h3 style={{ margin: '0 0 0.25rem' }}>{task.name}</h3>
                                             <p style={{ margin: '0 0 0.5rem', color: 'var(--color-text-primary)' }}>{task.workToComplete}</p>
+                                            {task.reminderTime && (
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.2rem' }}>
+                                                    <AlertCircle size={12} />
+                                                    Reminder: {task.reminderTime}
+                                                    {task.frequency === 'custom' && ` (${task.repeatDays.join(', ')})`}
+                                                    {task.frequency === 'daily' && ` (Daily)`}
+                                                </div>
+                                            )}
                                         </div>
                                         {isActive && (
                                             <div style={{

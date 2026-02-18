@@ -20,9 +20,21 @@ export const analyzeProductivityByTime = (tasks, workLogs) => {
         return 'night';
     };
 
+    // 0. Filter for Last 30 Days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const cutoff = thirtyDaysAgo.setHours(0, 0, 0, 0);
+
+    const isRecent = (dateStr) => {
+        if (!dateStr) return false;
+        return new Date(dateStr).getTime() >= cutoff;
+    };
+
     // 1. Analyze Tasks
     tasks.forEach(task => {
         if (!task.completedAt) return;
+        if (!isRecent(task.completedAt)) return; // Filter
+
         const bucket = getTimeOfDay(task.completedAt);
         buckets[bucket].attempts++;
         buckets[bucket].completed++; // Completed tasks count as success
@@ -31,6 +43,8 @@ export const analyzeProductivityByTime = (tasks, workLogs) => {
 
     // 2. Analyze Work Logs
     workLogs.forEach(log => {
+        if (!isRecent(log.date)) return; // Filter
+
         const bucket = getTimeOfDay(log.date);
         buckets[bucket].attempts++;
         buckets[bucket].completed++; // Logs are essentially completed sessions
@@ -51,7 +65,15 @@ export const analyzeDistractionTriggers = (distractionLogs) => {
     const triggers = {}; // { "Instagram": 5, "YouTube": 2 }
     const timePatterns = { morning: 0, afternoon: 0, evening: 0, night: 0 };
 
+    // 0. Filter for Last 30 Days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const cutoff = thirtyDaysAgo.setHours(0, 0, 0, 0);
+
     distractionLogs.forEach(log => {
+        if (!log.date) return;
+        if (new Date(log.date).getTime() < cutoff) return; // Filter
+
         // App frequency
         triggers[log.app] = (triggers[log.app] || 0) + 1;
 

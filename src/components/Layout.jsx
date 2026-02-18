@@ -5,6 +5,7 @@ import { getStorage, STORAGE_KEYS, clearAllStorage } from '../utils/storage';
 import { auth } from '../utils/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { useTheme } from '../context/ThemeContext';
+import { requestNotificationPermission, checkAndSendNotifications } from '../utils/notifications';
 
 const Layout = ({ children }) => {
     const location = useLocation();
@@ -23,6 +24,30 @@ const Layout = ({ children }) => {
         clearAllStorage();
         signOut(auth);
     };
+
+    // --- Notification Integration ---
+
+    useEffect(() => {
+        // 1. Request Permission on Load
+        requestNotificationPermission();
+
+        // 2. Setup Interval for Checking
+        const intervalId = setInterval(() => {
+            const tasks = getStorage(STORAGE_KEYS.TASKS, []);
+            const scheduled = getStorage(STORAGE_KEYS.SCHEDULED_TASKS, []);
+            const allTasks = [...tasks, ...scheduled];
+
+            checkAndSendNotifications(allTasks);
+        }, 60000); // Check every minute
+
+        // Run immediately once to catch if we just opened app at exact minute
+        const tasks = getStorage(STORAGE_KEYS.TASKS, []);
+        const scheduled = getStorage(STORAGE_KEYS.SCHEDULED_TASKS, []);
+        checkAndSendNotifications([...tasks, ...scheduled]);
+
+        return () => clearInterval(intervalId);
+    }, []);
+    // --------------------------------
 
     return (
         <div className="layout-wrapper" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
